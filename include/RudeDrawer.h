@@ -1,0 +1,36 @@
+#pragma once
+
+#include <cstdint>
+
+#define SOCKET_PATH "/tmp/AppDrawer.sock"
+
+typedef enum {
+    RDCMD_PING,
+    RDCMD_ADD_WINDOW,
+    RDCMD_REMOVE_WINDOW,
+} RudeDrawerCommandKind;
+
+typedef struct {
+    RudeDrawerCommandKind kind;
+    uint32_t windowWidth;
+    uint32_t windowHeight;
+    char* windowTitle[256];
+    uint32_t windowId;
+} RudeDrawerCommand;
+
+typedef enum {
+    RDRESP_EMPTY,
+    RDRESP_WINID,
+} RudeDrawerResponseKind;
+
+typedef enum {
+    RDERROR_INVALID_COMMAND,
+    RDERROR_INVALID_WINID,
+    RDERROR_OK,
+} RudeDrawerErrorKind;
+
+typedef struct {
+    RudeDrawerResponseKind kind;
+    RudeDrawerErrorKind errorKind;
+    uint32_t windowId;
+} RudeDrawerResponse;
