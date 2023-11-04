@@ -10,6 +10,7 @@
 #include <thread>
 
 #include "RudeDrawer.h"
+#include "Window.h"
 
 bool file_exists(std::string const& name) noexcept
 {
@@ -90,7 +91,7 @@ void AppDrawer::handleClient(int client_fd) noexcept
             std::cout << "  => Pong!\n";
             if (!send_err_or_fail(client_fd, RDERROR_OK)) continue;
             break;
-        case RDCMD_ADD_WINDOW: {
+        case RDCMD_ADD_WIN: {
             std::cout << "  => Adding window\n";
             std::cout << "    -> Dimensions: "
                       << command.windowWidth << "x" << command.windowHeight
@@ -106,12 +107,36 @@ void AppDrawer::handleClient(int client_fd) noexcept
             if (!send_or_fail(client_fd, &response, sizeof(RudeDrawerResponse)))
                 continue;
         } break;
-        case RDCMD_REMOVE_WINDOW:
+        case RDCMD_REMOVE_WIN:
             std::cout << "  => Removing window\n";
             std::cout << "    -> ID: " << command.windowId << "\n";
             try {
                 removeWindow(command.windowId);
-            } catch (const std::runtime_error& e) {
+            } catch (std::runtime_error const& e) {
+                std::cerr << e.what() << "\n";
+                if (!send_err_or_fail(client_fd, RDERROR_INVALID_WINID)) continue;
+                continue;
+            }
+            if (!send_err_or_fail(client_fd, RDERROR_OK)) continue;
+            break;
+        case RDCMD_START_POLLING_EVENTS_WIN:
+            std::cout << "  => Starting polling events for window\n";
+            std::cout << "    -> ID: " << command.windowId << "\n";
+            try {
+                setWindowPolling(command.windowId, true);
+            } catch (std::runtime_error const& e) {
+                std::cerr << e.what() << "\n";
+                if (!send_err_or_fail(client_fd, RDERROR_INVALID_WINID)) continue;
+                continue;
+            }
+            if (!send_err_or_fail(client_fd, RDERROR_OK)) continue;
+            break;
+        case RDCMD_STOP_POLLING_EVENTS_WIN:
+            std::cout << "  => Stopping polling events for window\n";
+            std::cout << "    -> ID: " << command.windowId << "\n";
+            try {
+                setWindowPolling(command.windowId, false);
+            } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
                 if (!send_err_or_fail(client_fd, RDERROR_INVALID_WINID)) continue;
                 continue;
@@ -142,6 +167,20 @@ void AppDrawer::removeWindow(uint32_t id)
         if (windows[i].id == id) {
             free(windows[i].pixels);
             windows.erase(windows.begin() + i);
+            return;
+        }
+    }
+    std::ostringstream error;
+    error << "ERROR: could not find window of ID `"
+          << id;
+    throw std::runtime_error(error.str());
+}
+
+void AppDrawer::setWindowPolling(uint32_t id, bool polling)
+{
+    for (size_t i = 0; i < windows.size(); ++i) {
+        if (windows[i].id == id) {
+            windows[i].events.isPolling = polling;
             return;
         }
     }

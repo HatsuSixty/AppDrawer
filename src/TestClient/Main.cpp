@@ -100,7 +100,7 @@ void Draw::ping()
 uint32_t Draw::addWindow(std::string title, uint32_t width, uint32_t height)
 {
     RudeDrawerCommand command;
-    command.kind = RDCMD_ADD_WINDOW;
+    command.kind = RDCMD_ADD_WIN;
     command.windowWidth = width;
     command.windowHeight = height;
     std::memset(command.windowTitle, 0, 256*sizeof(command.windowTitle[0]));
@@ -122,7 +122,7 @@ uint32_t Draw::addWindow(std::string title, uint32_t width, uint32_t height)
 void Draw::removeWindow(uint32_t id)
 {
     RudeDrawerCommand command;
-    command.kind = RDCMD_REMOVE_WINDOW;
+    command.kind = RDCMD_REMOVE_WIN;
     command.windowId = id;
     send(&command, sizeof(RudeDrawerCommand));
 
