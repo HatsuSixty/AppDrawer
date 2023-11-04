@@ -2,13 +2,15 @@
 
 #include <cstdint>
 #include <iostream>
-#include <map>
+#include <vector>
 
 #include <raylib.h>
-#include <unordered_map>
+
+#include "RudeDrawer.h"
 
 struct WindowEvents {
     bool isPolling;
+    std::vector<RudeDrawerEvent> events;
 };
 
 class Window {

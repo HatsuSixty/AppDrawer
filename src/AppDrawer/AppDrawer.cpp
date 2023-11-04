@@ -119,7 +119,7 @@ void AppDrawer::handleClient(int client_fd) noexcept
             }
             if (!send_err_or_fail(client_fd, RDERROR_OK)) continue;
             break;
-        case RDCMD_START_POLLING_EVENTS_WIN:
+        case RDCMD_START_POLLING_EVENTS_WIN: {
             std::cout << "  => Starting polling events for window\n";
             std::cout << "    -> ID: " << command.windowId << "\n";
             try {
@@ -129,8 +129,16 @@ void AppDrawer::handleClient(int client_fd) noexcept
                 if (!send_err_or_fail(client_fd, RDERROR_INVALID_WINID)) continue;
                 continue;
             }
+            for (size_t i = 0; i < windows.size(); ++i) {
+                if (windows[i].id == command.windowId) {
+                    std::thread thread(&AppDrawer::pollEvents, this, &windows[i]);
+                    break;
+                }
+            }
+            // We don't check for ID because the previous `try {}`
+            // already does that
             if (!send_err_or_fail(client_fd, RDERROR_OK)) continue;
-            break;
+        } break;
         case RDCMD_STOP_POLLING_EVENTS_WIN:
             std::cout << "  => Stopping polling events for window\n";
             std::cout << "    -> ID: " << command.windowId << "\n";
@@ -151,6 +159,19 @@ void AppDrawer::handleClient(int client_fd) noexcept
 
 exit:
     std::cout << "Exiting `handle_client() thread...`\n";
+}
+
+void AppDrawer::pollEvents(Window* window) noexcept
+{
+    while (window->events.isPolling) {
+        if (!window->events.events.empty()) {
+            auto event = window->events.events.back();
+            window->events.events.pop_back();
+            std::cout << "!!! Received event: "
+                      << event.kind << "\n";
+        }
+    }
+    std::cout << "Exiting `pollEvents()` thread...\n";
 }
 
 uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height) noexcept

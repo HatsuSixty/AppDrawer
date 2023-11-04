@@ -59,7 +59,15 @@ int main() noexcept
             if (CheckCollisionPointRec(GetMousePosition(), closeButtonRect)
                 && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
             {
-                std::cout << "CLOSE EVENT!!\n";
+                std::cout << "[INFO] Sending close event to window of ID `"
+                          << w.id << "\n";
+                if (w.events.isPolling) {
+                    RudeDrawerEvent event;
+                    event.kind = RDEVENT_CLOSE_WIN;
+                    w.events.events.push_back(event);
+                } else {
+                    std::cout << "[WARN] Window not polling events, not sending...\n";
+                }
             }
         }
 

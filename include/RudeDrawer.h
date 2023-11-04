@@ -36,3 +36,11 @@ typedef struct {
     RudeDrawerErrorKind errorKind;
     uint32_t windowId;
 } RudeDrawerResponse;
+
+typedef enum {
+    RDEVENT_CLOSE_WIN,
+} RudeDrawerEventKind;
+
+typedef struct {
+    RudeDrawerEventKind kind;
+} RudeDrawerEvent;
