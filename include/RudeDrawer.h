@@ -6,8 +6,10 @@
 
 typedef enum {
     RDCMD_PING,
-    RDCMD_ADD_WINDOW,
-    RDCMD_REMOVE_WINDOW,
+    RDCMD_ADD_WIN,
+    RDCMD_REMOVE_WIN,
+    RDCMD_START_POLLING_EVENTS_WIN,
+    RDCMD_STOP_POLLING_EVENTS_WIN,
 } RudeDrawerCommandKind;
 
 typedef struct {
@@ -34,3 +36,12 @@ typedef struct {
     RudeDrawerErrorKind errorKind;
     uint32_t windowId;
 } RudeDrawerResponse;
+
+typedef enum {
+    RDEVENT_NONE,
+    RDEVENT_CLOSE_WIN,
+} RudeDrawerEventKind;
+
+typedef struct {
+    RudeDrawerEventKind kind;
+} RudeDrawerEvent;

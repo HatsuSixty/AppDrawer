@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <sys/signal.h>
 
 #include "AppDrawer.h"
 #include "Consts.h"
@@ -7,6 +8,8 @@
 
 int main() noexcept
 {
+    signal(SIGPIPE, SIG_IGN);
+
     auto appdrawer = new AppDrawer();
     TRY(appdrawer->startServer());
 
@@ -38,13 +41,37 @@ int main() noexcept
             EndScissorMode();
 
             // Draw borders
-            auto border_thickness = 5;
+            auto borderThickness = 5;
             auto border = w.area;
-            border.width += border_thickness * 2;
-            border.height += border_thickness * 2;
-            border.x -= border_thickness;
-            border.y -= border_thickness;
-            DrawRectangleLinesEx(border, border_thickness, BLUE);
+            border.width += borderThickness * 2;
+            border.height += borderThickness * 2;
+            border.x -= borderThickness;
+            border.y -= borderThickness;
+            DrawRectangleLinesEx(border, borderThickness, BLUE);
+
+            // Draw close button
+            auto closeButtonDims = 20.0f;
+            Rectangle closeButtonRect = {
+                .x = w.area.x - borderThickness,
+                .y = w.area.y - borderThickness - closeButtonDims,
+                .width = closeButtonDims,
+                .height = closeButtonDims,
+            };
+            DrawRectangleRec(closeButtonRect, RED);
+
+            if (CheckCollisionPointRec(GetMousePosition(), closeButtonRect)
+                && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+            {
+                std::cout << "[INFO] Sending close event to window of ID `"
+                          << w.id << "\n";
+                if (w.events.isPolling) {
+                    RudeDrawerEvent event;
+                    event.kind = RDEVENT_CLOSE_WIN;
+                    w.events.events.push_back(event);
+                } else {
+                    std::cout << "[WARN] Window not polling events, not sending...\n";
+                }
+            }
         }
 
         EndDrawing();

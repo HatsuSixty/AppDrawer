@@ -23,6 +23,9 @@ public:
     void ping();
     uint32_t addWindow(std::string title, uint32_t width, uint32_t height);
     void removeWindow(uint32_t id);
+    void startPollingEventsWindow(uint32_t id);
+    void stopPollingEventsWindow(uint32_t id);
+    RudeDrawerEvent pollEvent();
 
     ~Draw() noexcept;
 };
@@ -100,7 +103,7 @@ void Draw::ping()
 uint32_t Draw::addWindow(std::string title, uint32_t width, uint32_t height)
 {
     RudeDrawerCommand command;
-    command.kind = RDCMD_ADD_WINDOW;
+    command.kind = RDCMD_ADD_WIN;
     command.windowWidth = width;
     command.windowHeight = height;
     std::memset(command.windowTitle, 0, 256*sizeof(command.windowTitle[0]));
@@ -122,7 +125,7 @@ uint32_t Draw::addWindow(std::string title, uint32_t width, uint32_t height)
 void Draw::removeWindow(uint32_t id)
 {
     RudeDrawerCommand command;
-    command.kind = RDCMD_REMOVE_WINDOW;
+    command.kind = RDCMD_REMOVE_WIN;
     command.windowId = id;
     send(&command, sizeof(RudeDrawerCommand));
 
@@ -130,6 +133,39 @@ void Draw::removeWindow(uint32_t id)
     recv(&response, sizeof(RudeDrawerResponse));
 
     notOk(response);
+}
+
+void Draw::startPollingEventsWindow(uint32_t id)
+{
+    RudeDrawerCommand command;
+    command.kind = RDCMD_START_POLLING_EVENTS_WIN;
+    command.windowId = id;
+    send(&command, sizeof(RudeDrawerCommand));
+
+    RudeDrawerResponse response;
+    recv(&response, sizeof(RudeDrawerResponse));
+
+    notOk(response);
+}
+
+void Draw::stopPollingEventsWindow(uint32_t id)
+{
+    RudeDrawerCommand command;
+    command.kind = RDCMD_STOP_POLLING_EVENTS_WIN;
+    command.windowId = id;
+    send(&command, sizeof(RudeDrawerCommand));
+
+    RudeDrawerResponse response;
+    recv(&response, sizeof(RudeDrawerResponse));
+
+    notOk(response);
+}
+
+RudeDrawerEvent Draw::pollEvent()
+{
+    RudeDrawerEvent event;
+    recv(&event, sizeof(RudeDrawerEvent));
+    return event;
 }
 
 Draw::~Draw() noexcept
@@ -146,11 +182,23 @@ int main() noexcept
 
     uint32_t id;
     TRY(id = draw.addWindow("Test Client", 400, 400));
-
     std::cout << "Window ID: " << id << "\n";
 
-    std::cout << "Press enter to quit the application...\n";
-    std::getchar();
+    TRY(draw.startPollingEventsWindow(id));
+    bool quit = false;
+    while (!quit) {
+        auto event = draw.pollEvent();
+        switch (event.kind) {
+        case RDEVENT_NONE:
+            std::cout << "WTF None event!!??\n";
+            break;
+        case RDEVENT_CLOSE_WIN:
+            std::cout << "Received close window event\n";
+            quit = true;
+            break;
+        }
+    }
+    TRY(draw.stopPollingEventsWindow(id));
 
     TRY(draw.removeWindow(id));
 
