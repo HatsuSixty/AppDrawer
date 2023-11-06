@@ -188,7 +188,7 @@ size_t AppDrawer::findWindow(uint32_t id)
 {
     for (size_t i = 0; i < windows.size(); ++i) {
         if (windows[i].id == id) {
-            return id;
+            return i;
         }
     }
     std::ostringstream error;
