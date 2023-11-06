@@ -200,6 +200,12 @@ size_t AppDrawer::findWindow(uint32_t id)
 void AppDrawer::removeWindow(uint32_t id)
 {
     auto i = findWindow(id);
+
+    windows[i].events.isPolling = false;
+    // Yes I know this is the best solution a human being could ever
+    // come up with
+    for (size_t i = 0; i < 500; i++) asm("nop");
+
     free(windows[i].pixels);
     windows.erase(windows.begin() + i);
 }
@@ -253,7 +259,3 @@ AppDrawer::~AppDrawer() noexcept
     }
     close(fd);
 }
-
-// TODO: multiline if-conditions should have its blocks starting at
-// the next line
-// TODO: `pollEvents()` should not continue running if window gets closed
