@@ -124,21 +124,17 @@ void AppDrawer::handleClient(int clientFd) noexcept
             std::cout << "    -> ID: " << command.windowId << "\n";
             try {
                 setWindowPolling(command.windowId, true);
+
+                auto i = findWindow(command.windowId);
+                std::thread thread(&AppDrawer::pollEvents, this,
+                                   &windows[i], clientFd);
+                thread.detach();
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
                 if (!sendErrOrFail(clientFd, RDERROR_INVALID_WINID)) continue;
                 continue;
             }
-            for (size_t i = 0; i < windows.size(); ++i) {
-                if (windows[i].id == command.windowId) {
-                    std::thread thread(&AppDrawer::pollEvents, this,
-                                       &windows[i], clientFd);
-                    thread.detach();
-                    break;
-                }
-            }
-            // We don't check for ID because the previous `try {}`
-            // already does that
+
             if (!sendErrOrFail(clientFd, RDERROR_OK)) continue;
         } break;
         case RDCMD_STOP_POLLING_EVENTS_WIN:
@@ -188,13 +184,11 @@ uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height
     return id;
 }
 
-void AppDrawer::removeWindow(uint32_t id)
+size_t AppDrawer::findWindow(uint32_t id)
 {
     for (size_t i = 0; i < windows.size(); ++i) {
         if (windows[i].id == id) {
-            free(windows[i].pixels);
-            windows.erase(windows.begin() + i);
-            return;
+            return id;
         }
     }
     std::ostringstream error;
@@ -203,18 +197,17 @@ void AppDrawer::removeWindow(uint32_t id)
     throw std::runtime_error(error.str());
 }
 
+void AppDrawer::removeWindow(uint32_t id)
+{
+    auto i = findWindow(id);
+    free(windows[i].pixels);
+    windows.erase(windows.begin() + i);
+}
+
 void AppDrawer::setWindowPolling(uint32_t id, bool polling)
 {
-    for (size_t i = 0; i < windows.size(); ++i) {
-        if (windows[i].id == id) {
-            windows[i].events.isPolling = polling;
-            return;
-        }
-    }
-    std::ostringstream error;
-    error << "ERROR: could not find window of ID `"
-          << id;
-    throw std::runtime_error(error.str());
+    auto i = findWindow(id);
+    windows[i].events.isPolling = polling;
 }
 
 void AppDrawer::startServer()
@@ -261,7 +254,7 @@ AppDrawer::~AppDrawer() noexcept
     close(fd);
 }
 
-// TODO: handle ID `0`
 // TODO: fix error messages with incorrect use of ``
 // TODO: multiline if-conditions should have its blocks starting at
 // the next line
+// TODO: `pollEvents()` should not continue running if window gets closed
