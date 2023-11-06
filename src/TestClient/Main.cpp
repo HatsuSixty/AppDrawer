@@ -42,8 +42,8 @@ void Draw::send(void* data, size_t n)
 
 void Draw::recv(void* data, size_t n)
 {
-    auto num_of_bytes_recvd = ::recv(socket, data, n, 0);
-    if (num_of_bytes_recvd < 0) {
+    auto numOfBytesRecvd = ::recv(socket, data, n, 0);
+    if (numOfBytesRecvd < 0) {
         std::ostringstream error;
         error << "ERROR: could not receive data from server: "
               << strerror(errno);

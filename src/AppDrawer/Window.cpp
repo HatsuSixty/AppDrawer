@@ -15,7 +15,7 @@ Window::Window(std::string title, uint32_t width, uint32_t height, uint32_t id) 
     area.y = (float)HEIGHT / 2 - (float)height / 2;
     this->id = id;
 
-    auto pixels_size = width * height * COMPONENTS;
-    pixels = (uint8_t*)std::malloc(pixels_size);
-    std::memset(pixels, 0xFF, pixels_size);
+    auto pixelsSize = width * height * COMPONENTS;
+    pixels = (uint8_t*)std::malloc(pixelsSize);
+    std::memset(pixels, 0xFF, pixelsSize);
 }

@@ -12,28 +12,28 @@
 #include "RudeDrawer.h"
 #include "Window.h"
 
-bool file_exists(std::string const& name) noexcept
+bool fileExists(std::string const& name) noexcept
 {
     struct stat buffer;
     return ::stat(name.c_str(), &buffer) == 0;
 }
 
-bool receive_or_fail(int sockfd, void* data, size_t n) noexcept
+bool receiveOrFail(int sockfd, void* data, size_t n) noexcept
 {
-    int num_bytes_received = recv(sockfd, data, n, 0);
-    if (num_bytes_received < 0) {
+    int numBytesReceived = recv(sockfd, data, n, 0);
+    if (numBytesReceived < 0) {
         std::cerr << "ERROR: could not receive bytes from socket: "
                   << strerror(errno) << "\n";
         return false;
     }
-    else if (num_bytes_received == 0) {
+    else if (numBytesReceived == 0) {
         std::cout << "[INFO] Connection closed by client\n";
         return false;
     }
     return true;
 }
 
-bool send_or_fail(int fd, void* data, size_t n) noexcept
+bool sendOrFail(int fd, void* data, size_t n) noexcept
 {
     if (send(fd, data, n, 0) < 0) {
         std::cerr << "ERROR: could not send data to the client: "
@@ -43,12 +43,12 @@ bool send_or_fail(int fd, void* data, size_t n) noexcept
     return true;
 }
 
-bool send_err_or_fail(int fd, RudeDrawerErrorKind err) noexcept
+bool sendErrOrFail(int fd, RudeDrawerErrorKind err) noexcept
 {
     RudeDrawerResponse response;
     response.kind = RDRESP_EMPTY;
     response.errorKind = err;
-    return send_or_fail(fd, &response, sizeof(RudeDrawerResponse));
+    return sendOrFail(fd, &response, sizeof(RudeDrawerResponse));
 }
 
 void AppDrawer::listener() noexcept
@@ -59,29 +59,29 @@ void AppDrawer::listener() noexcept
     }
     std::cout << "[INFO] Listening to socket `" << SOCKET_PATH << "`...\n";
 
-    struct sockaddr_un client_addr;
+    struct sockaddr_un clientAddr;
     while (true) {
-        socklen_t client_len = sizeof(struct sockaddr_un);
+        socklen_t clientLen = sizeof(struct sockaddr_un);
         std::cout << "[INFO] Waiting for connection...\n";
-        auto client_fd = accept(fd, (struct sockaddr*)&client_addr, &client_len);
-        if (client_fd < 0) {
+        auto clientFd = accept(fd, (struct sockaddr*)&clientAddr, &clientLen);
+        if (clientFd < 0) {
             std::cerr << "ERROR: could not accept connection: "
                       << strerror(errno) << "\n";
             continue;
         }
 
-        std::thread thread(&AppDrawer::handleClient, this, client_fd);
+        std::thread thread(&AppDrawer::handleClient, this, clientFd);
         thread.detach();
     }
 exit:
     std::cout << "Exiting `listener()` thread...\n";
 }
 
-void AppDrawer::handleClient(int client_fd) noexcept
+void AppDrawer::handleClient(int clientFd) noexcept
 {
     RudeDrawerCommand command;
     while (true) {
-        if (!receive_or_fail(client_fd, &command, sizeof(RudeDrawerCommand))) {
+        if (!receiveOrFail(clientFd, &command, sizeof(RudeDrawerCommand))) {
             goto exit;
         }
 
@@ -89,7 +89,7 @@ void AppDrawer::handleClient(int client_fd) noexcept
         switch (command.kind) {
         case RDCMD_PING:
             std::cout << "  => Pong!\n";
-            if (!send_err_or_fail(client_fd, RDERROR_OK)) continue;
+            if (!sendErrOrFail(clientFd, RDERROR_OK)) continue;
             break;
         case RDCMD_ADD_WIN: {
             std::cout << "  => Adding window\n";
@@ -104,7 +104,7 @@ void AppDrawer::handleClient(int client_fd) noexcept
             response.kind = RDRESP_WINID;
             response.errorKind = RDERROR_OK;
             response.windowId = id;
-            if (!send_or_fail(client_fd, &response, sizeof(RudeDrawerResponse)))
+            if (!sendOrFail(clientFd, &response, sizeof(RudeDrawerResponse)))
                 continue;
         } break;
         case RDCMD_REMOVE_WIN:
@@ -114,10 +114,10 @@ void AppDrawer::handleClient(int client_fd) noexcept
                 removeWindow(command.windowId);
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
-                if (!send_err_or_fail(client_fd, RDERROR_INVALID_WINID)) continue;
+                if (!sendErrOrFail(clientFd, RDERROR_INVALID_WINID)) continue;
                 continue;
             }
-            if (!send_err_or_fail(client_fd, RDERROR_OK)) continue;
+            if (!sendErrOrFail(clientFd, RDERROR_OK)) continue;
             break;
         case RDCMD_START_POLLING_EVENTS_WIN: {
             std::cout << "  => Starting polling events for window\n";
@@ -126,20 +126,20 @@ void AppDrawer::handleClient(int client_fd) noexcept
                 setWindowPolling(command.windowId, true);
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
-                if (!send_err_or_fail(client_fd, RDERROR_INVALID_WINID)) continue;
+                if (!sendErrOrFail(clientFd, RDERROR_INVALID_WINID)) continue;
                 continue;
             }
             for (size_t i = 0; i < windows.size(); ++i) {
                 if (windows[i].id == command.windowId) {
                     std::thread thread(&AppDrawer::pollEvents, this,
-                                       &windows[i], client_fd);
+                                       &windows[i], clientFd);
                     thread.detach();
                     break;
                 }
             }
             // We don't check for ID because the previous `try {}`
             // already does that
-            if (!send_err_or_fail(client_fd, RDERROR_OK)) continue;
+            if (!sendErrOrFail(clientFd, RDERROR_OK)) continue;
         } break;
         case RDCMD_STOP_POLLING_EVENTS_WIN:
             std::cout << "  => Stopping polling events for window\n";
@@ -148,19 +148,19 @@ void AppDrawer::handleClient(int client_fd) noexcept
                 setWindowPolling(command.windowId, false);
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
-                if (!send_err_or_fail(client_fd, RDERROR_INVALID_WINID)) continue;
+                if (!sendErrOrFail(clientFd, RDERROR_INVALID_WINID)) continue;
                 continue;
             }
-            if (!send_err_or_fail(client_fd, RDERROR_OK)) continue;
+            if (!sendErrOrFail(clientFd, RDERROR_OK)) continue;
             break;
         default:
             std::cerr << "  => ERROR: unknown command `" << command.kind << "`\n";
-            if (!send_err_or_fail(client_fd, RDERROR_INVALID_COMMAND)) continue;
+            if (!sendErrOrFail(clientFd, RDERROR_INVALID_COMMAND)) continue;
         }
     }
 
 exit:
-    std::cout << "Exiting `handle_client() thread...`\n";
+    std::cout << "Exiting `handleClient() thread...`\n";
 }
 
 void AppDrawer::pollEvents(Window* window, int clientFd) noexcept
@@ -170,7 +170,7 @@ void AppDrawer::pollEvents(Window* window, int clientFd) noexcept
             auto event = window->events.events.back();
             window->events.events.pop_back();
 
-            if (!send_or_fail(clientFd, &event, sizeof(RudeDrawerEvent)))
+            if (!sendOrFail(clientFd, &event, sizeof(RudeDrawerEvent)))
                 continue;
 
             std::cout << "!!! Received event: "
@@ -219,7 +219,7 @@ void AppDrawer::setWindowPolling(uint32_t id, bool polling)
 
 void AppDrawer::startServer()
 {
-    if (file_exists(SOCKET_PATH))
+    if (fileExists(SOCKET_PATH))
         if (std::remove(SOCKET_PATH) != 0) {
             std::ostringstream error;
             error << "ERROR: could not remove `"
@@ -232,16 +232,16 @@ void AppDrawer::startServer()
     if (fd < 0)
         throw std::runtime_error("ERROR: could not open socket: %s");
 
-    struct sockaddr_un server_addr;
-    std::memset(&server_addr, 0, sizeof(struct sockaddr_un));
-    server_addr.sun_family = AF_UNIX;
-    std::strncpy(server_addr.sun_path, SOCKET_PATH,
-        sizeof(server_addr.sun_path) - 1);
+    struct sockaddr_un serverAddr;
+    std::memset(&serverAddr, 0, sizeof(struct sockaddr_un));
+    serverAddr.sun_family = AF_UNIX;
+    std::strncpy(serverAddr.sun_path, SOCKET_PATH,
+        sizeof(serverAddr.sun_path) - 1);
 
     auto opt = SO_REUSEADDR;
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    if (bind(fd, (struct sockaddr*)&server_addr,
+    if (bind(fd, (struct sockaddr*)&serverAddr,
             sizeof(struct sockaddr_un))
         < 0) {
         std::ostringstream error;
@@ -261,6 +261,7 @@ AppDrawer::~AppDrawer() noexcept
     close(fd);
 }
 
-// TODO: use camelCase on everything
 // TODO: handle ID `0`
 // TODO: fix error messages with incorrect use of ``
+// TODO: multiline if-conditions should have its blocks starting at
+// the next line

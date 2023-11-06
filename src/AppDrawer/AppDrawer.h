@@ -11,7 +11,7 @@ private:
     int fd;
 
     void listener() noexcept;
-    void handleClient(int client_fd) noexcept;
+    void handleClient(int clientFd) noexcept;
     void pollEvents(Window* window, int clientFd) noexcept;
 public:
     std::vector<Window> windows;
