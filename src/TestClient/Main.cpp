@@ -78,8 +78,7 @@ void Draw::connect()
     addr.sun_family = AF_UNIX;
     std::strncpy(addr.sun_path, SOCKET_PATH, sizeof(addr.sun_path) - 1);
 
-    if (::connect(socket, (struct sockaddr*)&addr, sizeof(struct sockaddr_un)) <
-        0) {
+    if (::connect(socket, (struct sockaddr*)&addr, sizeof(struct sockaddr_un)) < 0) {
         std::ostringstream error;
         error << "ERROR: could not connect to socket: "
               << strerror(errno);
