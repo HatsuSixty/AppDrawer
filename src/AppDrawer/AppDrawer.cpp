@@ -156,7 +156,7 @@ void AppDrawer::handleClient(int clientFd) noexcept
     }
 
 exit:
-    std::cout << "Exiting `handleClient() thread...`\n";
+    std::cout << "Exiting `handleClient()` thread...\n";
 }
 
 void AppDrawer::pollEvents(Window* window, int clientFd) noexcept
@@ -193,7 +193,7 @@ size_t AppDrawer::findWindow(uint32_t id)
     }
     std::ostringstream error;
     error << "ERROR: could not find window of ID `"
-          << id;
+          << id << "`";
     throw std::runtime_error(error.str());
 }
 
@@ -254,7 +254,6 @@ AppDrawer::~AppDrawer() noexcept
     close(fd);
 }
 
-// TODO: fix error messages with incorrect use of ``
 // TODO: multiline if-conditions should have its blocks starting at
 // the next line
 // TODO: `pollEvents()` should not continue running if window gets closed

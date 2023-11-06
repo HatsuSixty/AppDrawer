@@ -63,7 +63,7 @@ int main() noexcept
                 && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
             {
                 std::cout << "[INFO] Sending close event to window of ID `"
-                          << w.id << "\n";
+                          << w.id << "`\n";
                 if (w.events.isPolling) {
                     RudeDrawerEvent event;
                     event.kind = RDEVENT_CLOSE_WIN;
