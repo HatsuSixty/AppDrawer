@@ -37,7 +37,7 @@ bool send_or_fail(int fd, void* data, size_t n) noexcept
 {
     if (send(fd, data, n, 0) < 0) {
         std::cerr << "ERROR: could not send data to the client: "
-                  << strerror(errno);
+                  << strerror(errno) << "\n";
         return false;
     }
     return true;
@@ -131,7 +131,9 @@ void AppDrawer::handleClient(int client_fd) noexcept
             }
             for (size_t i = 0; i < windows.size(); ++i) {
                 if (windows[i].id == command.windowId) {
-                    std::thread thread(&AppDrawer::pollEvents, this, &windows[i]);
+                    std::thread thread(&AppDrawer::pollEvents, this,
+                                       &windows[i], client_fd);
+                    thread.detach();
                     break;
                 }
             }
@@ -161,12 +163,16 @@ exit:
     std::cout << "Exiting `handle_client() thread...`\n";
 }
 
-void AppDrawer::pollEvents(Window* window) noexcept
+void AppDrawer::pollEvents(Window* window, int clientFd) noexcept
 {
     while (window->events.isPolling) {
         if (!window->events.events.empty()) {
             auto event = window->events.events.back();
             window->events.events.pop_back();
+
+            if (!send_or_fail(clientFd, &event, sizeof(RudeDrawerEvent)))
+                continue;
+
             std::cout << "!!! Received event: "
                       << event.kind << "\n";
         }
@@ -254,3 +260,7 @@ AppDrawer::~AppDrawer() noexcept
     }
     close(fd);
 }
+
+// TODO: use camelCase on everything
+// TODO: handle ID `0`
+// TODO: fix error messages with incorrect use of ``

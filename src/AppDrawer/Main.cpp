@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <sys/signal.h>
 
 #include "AppDrawer.h"
 #include "Consts.h"
@@ -7,6 +8,8 @@
 
 int main() noexcept
 {
+    signal(SIGPIPE, SIG_IGN);
+
     auto appdrawer = new AppDrawer();
     TRY(appdrawer->startServer());
 

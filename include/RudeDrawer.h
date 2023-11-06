@@ -38,6 +38,7 @@ typedef struct {
 } RudeDrawerResponse;
 
 typedef enum {
+    RDEVENT_NONE,
     RDEVENT_CLOSE_WIN,
 } RudeDrawerEventKind;
 
