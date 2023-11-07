@@ -126,7 +126,7 @@ void AppDrawer::handleClient(int clientFd) noexcept
                 setWindowPolling(command.windowId, true);
 
                 auto i = findWindow(command.windowId);
-                std::thread thread(&AppDrawer::pollEvents, this, i, clientFd);
+                std::thread thread(&AppDrawer::pollEvents, this, windows[i], clientFd);
                 thread.detach();
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
@@ -158,13 +158,12 @@ exit:
     std::cout << "Exiting `handleClient()` thread...\n";
 }
 
-void AppDrawer::pollEvents(size_t window_index, int clientFd) noexcept
+void AppDrawer::pollEvents(Window* window, int clientFd) noexcept
 {
-    auto i = window_index;
-    while (windows[i].events.isPolling) {
-        if (!windows[i].events.events.empty()) {
-            auto event = windows[i].events.events.back();
-            windows[i].events.events.pop_back();
+    while (window->events.isPolling) {
+        if (!window->events.events.empty()) {
+            auto event = window->events.events.back();
+            window->events.events.pop_back();
 
             if (!sendOrFail(clientFd, &event, sizeof(RudeDrawerEvent)))
                 continue;
@@ -180,14 +179,14 @@ uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height
 {
     auto id = windowId++;
     Window* window = new Window(title, width, height, id);
-    windows.push_back(*window);
+    windows.push_back(window);
     return id;
 }
 
 size_t AppDrawer::findWindow(uint32_t id)
 {
     for (size_t i = 0; i < windows.size(); ++i) {
-        if (windows[i].id == id) {
+        if (windows[i]->id == id) {
             return i;
         }
     }
@@ -201,19 +200,20 @@ void AppDrawer::removeWindow(uint32_t id)
 {
     auto i = findWindow(id);
 
-    windows[i].events.isPolling = false;
+    windows[i]->events.isPolling = false;
     // Yes I know this is the best solution a human being could ever
     // come up with
     for (size_t i = 0; i < 500; i++) asm("nop");
 
-    free(windows[i].pixels);
+    free(windows[i]->pixels);
+    delete windows[i];
     windows.erase(windows.begin() + i);
 }
 
 void AppDrawer::setWindowPolling(uint32_t id, bool polling)
 {
     auto i = findWindow(id);
-    windows[i].events.isPolling = polling;
+    windows[i]->events.isPolling = polling;
 }
 
 void AppDrawer::startServer()
@@ -255,7 +255,7 @@ void AppDrawer::startServer()
 AppDrawer::~AppDrawer() noexcept
 {
     for (auto& w : windows) {
-        free(w.pixels);
+        free(w->pixels);
     }
     close(fd);
 }

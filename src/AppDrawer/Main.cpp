@@ -22,27 +22,27 @@ int main() noexcept
 
         Texture2D texture;
         for (auto& w : appdrawer->windows) {
-            BeginScissorMode(w.area.x, w.area.y, w.area.width, w.area.height);
+            BeginScissorMode(w->area.x, w->area.y, w->area.width, w->area.height);
 
             // Draw content
             Image image = {
-                .data = w.pixels,
-                .width = (int)w.area.width,
-                .height = (int)w.area.height,
+                .data = w->pixels,
+                .width = (int)w->area.width,
+                .height = (int)w->area.height,
                 .mipmaps = 1,
                 .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
             };
             texture = LoadTextureFromImage(image);
-            DrawTexture(texture, w.area.x, w.area.y, WHITE);
+            DrawTexture(texture, w->area.x, w->area.y, WHITE);
 
             // Draw title
-            DrawText(w.title.c_str(), w.area.x + 1, w.area.y, 30, BLUE);
+            DrawText(w->title.c_str(), w->area.x + 1, w->area.y, 30, BLUE);
 
             EndScissorMode();
 
             // Draw borders
             auto borderThickness = 5;
-            auto border = w.area;
+            auto border = w->area;
             border.width += borderThickness * 2;
             border.height += borderThickness * 2;
             border.x -= borderThickness;
@@ -52,8 +52,8 @@ int main() noexcept
             // Draw close button
             auto closeButtonDims = 20.0f;
             Rectangle closeButtonRect = {
-                .x = w.area.x - borderThickness,
-                .y = w.area.y - borderThickness - closeButtonDims,
+                .x = w->area.x - borderThickness,
+                .y = w->area.y - borderThickness - closeButtonDims,
                 .width = closeButtonDims,
                 .height = closeButtonDims,
             };
@@ -63,11 +63,11 @@ int main() noexcept
                 && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
             {
                 std::cout << "[INFO] Sending close event to window of ID `"
-                          << w.id << "`\n";
-                if (w.events.isPolling) {
+                          << w->id << "`\n";
+                if (w->events.isPolling) {
                     RudeDrawerEvent event;
                     event.kind = RDEVENT_CLOSE_WIN;
-                    w.events.events.push_back(event);
+                    w->events.events.push_back(event);
                 } else {
                     std::cout << "[WARN] Window not polling events, not sending...\n";
                 }
