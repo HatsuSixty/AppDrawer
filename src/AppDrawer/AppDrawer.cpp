@@ -126,8 +126,7 @@ void AppDrawer::handleClient(int clientFd) noexcept
                 setWindowPolling(command.windowId, true);
 
                 auto i = findWindow(command.windowId);
-                std::thread thread(&AppDrawer::pollEvents, this,
-                                   &windows[i], clientFd);
+                std::thread thread(&AppDrawer::pollEvents, this, i, clientFd);
                 thread.detach();
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
@@ -159,12 +158,13 @@ exit:
     std::cout << "Exiting `handleClient()` thread...\n";
 }
 
-void AppDrawer::pollEvents(Window* window, int clientFd) noexcept
+void AppDrawer::pollEvents(size_t window_index, int clientFd) noexcept
 {
-    while (window->events.isPolling) {
-        if (!window->events.events.empty()) {
-            auto event = window->events.events.back();
-            window->events.events.pop_back();
+    auto i = window_index;
+    while (windows[i].events.isPolling) {
+        if (!windows[i].events.events.empty()) {
+            auto event = windows[i].events.events.back();
+            windows[i].events.events.pop_back();
 
             if (!sendOrFail(clientFd, &event, sizeof(RudeDrawerEvent)))
                 continue;

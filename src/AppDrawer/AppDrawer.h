@@ -12,7 +12,7 @@ private:
 
     void listener() noexcept;
     void handleClient(int clientFd) noexcept;
-    void pollEvents(Window* window, int clientFd) noexcept;
+    void pollEvents(size_t window_index, int clientFd) noexcept;
 public:
     std::vector<Window> windows;
 
