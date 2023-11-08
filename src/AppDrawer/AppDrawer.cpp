@@ -13,13 +13,13 @@
 #include "RudeDrawer.h"
 #include "Window.h"
 
-bool fileExists(std::string const& name) noexcept
+bool fileExists(std::string const& name) noexcept(true)
 {
     struct stat buffer;
     return ::stat(name.c_str(), &buffer) == 0;
 }
 
-bool receiveOrFail(int sockfd, void* data, size_t n) noexcept
+bool receiveOrFail(int sockfd, void* data, size_t n) noexcept(true)
 {
     int numBytesReceived = recv(sockfd, data, n, 0);
     if (numBytesReceived < 0) {
@@ -34,7 +34,7 @@ bool receiveOrFail(int sockfd, void* data, size_t n) noexcept
     return true;
 }
 
-bool sendOrFail(int fd, void* data, size_t n) noexcept
+bool sendOrFail(int fd, void* data, size_t n) noexcept(true)
 {
     if (send(fd, data, n, 0) < 0) {
         std::cerr << "ERROR: could not send data to the client: "
@@ -44,7 +44,7 @@ bool sendOrFail(int fd, void* data, size_t n) noexcept
     return true;
 }
 
-bool sendErrOrFail(int fd, RudeDrawerErrorKind err) noexcept
+bool sendErrOrFail(int fd, RudeDrawerErrorKind err) noexcept(true)
 {
     RudeDrawerResponse response;
     response.kind = RDRESP_EMPTY;
@@ -52,7 +52,7 @@ bool sendErrOrFail(int fd, RudeDrawerErrorKind err) noexcept
     return sendOrFail(fd, &response, sizeof(RudeDrawerResponse));
 }
 
-void AppDrawer::listener() noexcept
+void AppDrawer::listener() noexcept(true)
 {
     if (listen(fd, 20) < 0) {
         std::cerr << "ERROR: could not listen to socket: " << strerror(errno);
@@ -78,7 +78,7 @@ exit:
     std::cout << "Exiting `listener()` thread...\n";
 }
 
-void AppDrawer::handleClient(int clientFd) noexcept
+void AppDrawer::handleClient(int clientFd) noexcept(true)
 {
     RudeDrawerCommand command;
     while (true) {
@@ -159,7 +159,7 @@ exit:
     std::cout << "Exiting `handleClient()` thread...\n";
 }
 
-void AppDrawer::pollEvents(Window* window, int clientFd) noexcept
+void AppDrawer::pollEvents(Window* window, int clientFd) noexcept(true)
 {
     while (window->events.isPolling) {
         if (!window->events.events.empty()) {
@@ -176,7 +176,7 @@ void AppDrawer::pollEvents(Window* window, int clientFd) noexcept
     std::cout << "Exiting `pollEvents()` thread...\n";
 }
 
-uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height) noexcept
+uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height) noexcept(true)
 {
     std::lock_guard<std::mutex> guard(windowsMutex);
 
@@ -186,7 +186,7 @@ uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height
     return id;
 }
 
-size_t AppDrawer::findWindow(uint32_t id)
+size_t AppDrawer::findWindow(uint32_t id) noexcept(false)
 {
     for (size_t i = 0; i < windows.size(); ++i) {
         if (windows[i]->id == id) {
@@ -199,7 +199,7 @@ size_t AppDrawer::findWindow(uint32_t id)
     throw std::runtime_error(error.str());
 }
 
-void AppDrawer::removeWindow(uint32_t id)
+void AppDrawer::removeWindow(uint32_t id) noexcept(false)
 {
     std::lock_guard<std::mutex> guard(windowsMutex);
 
@@ -215,13 +215,13 @@ void AppDrawer::removeWindow(uint32_t id)
     windows.erase(windows.begin() + i);
 }
 
-void AppDrawer::setWindowPolling(uint32_t id, bool polling)
+void AppDrawer::setWindowPolling(uint32_t id, bool polling) noexcept(false)
 {
     auto i = findWindow(id);
     windows[i]->events.isPolling = polling;
 }
 
-void AppDrawer::startServer()
+void AppDrawer::startServer() noexcept(false)
 {
     if (fileExists(SOCKET_PATH))
         if (std::remove(SOCKET_PATH) != 0) {
@@ -257,7 +257,7 @@ void AppDrawer::startServer()
     thread.detach();
 }
 
-AppDrawer::~AppDrawer() noexcept
+AppDrawer::~AppDrawer() noexcept(true)
 {
     for (auto& w : windows) {
         free(w->pixels);

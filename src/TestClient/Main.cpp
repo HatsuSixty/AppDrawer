@@ -15,22 +15,22 @@ class Draw {
 private:
     int socket;
 
-    void send(void* data, size_t n);
-    void recv(void* data, size_t n);
-    void notOk(RudeDrawerResponse resp);
+    void send(void* data, size_t n) noexcept(false);
+    void recv(void* data, size_t n) noexcept(false);
+    void notOk(RudeDrawerResponse resp) noexcept(false);
 public:
-    void connect();
-    void ping();
-    uint32_t addWindow(std::string title, uint32_t width, uint32_t height);
-    void removeWindow(uint32_t id);
-    void startPollingEventsWindow(uint32_t id);
-    void stopPollingEventsWindow(uint32_t id);
-    RudeDrawerEvent pollEvent();
+    void connect() noexcept(false);
+    void ping() noexcept(false);
+    uint32_t addWindow(std::string title, uint32_t width, uint32_t height) noexcept(false);
+    void removeWindow(uint32_t id) noexcept(false);
+    void startPollingEventsWindow(uint32_t id) noexcept(false);
+    void stopPollingEventsWindow(uint32_t id) noexcept(false);
+    RudeDrawerEvent pollEvent() noexcept(false);
 
-    ~Draw() noexcept;
+    ~Draw() noexcept(true);
 };
 
-void Draw::send(void* data, size_t n)
+void Draw::send(void* data, size_t n) noexcept(false)
 {
     if (::send(socket, data, n, 0) < 0) {
         std::ostringstream error;
@@ -40,7 +40,7 @@ void Draw::send(void* data, size_t n)
     }
 }
 
-void Draw::recv(void* data, size_t n)
+void Draw::recv(void* data, size_t n) noexcept(false)
 {
     auto numOfBytesRecvd = ::recv(socket, data, n, 0);
     if (numOfBytesRecvd < 0) {
@@ -52,7 +52,7 @@ void Draw::recv(void* data, size_t n)
     }
 }
 
-void Draw::notOk(RudeDrawerResponse resp)
+void Draw::notOk(RudeDrawerResponse resp) noexcept(false)
 {
     if (resp.errorKind != RDERROR_OK) {
         std::ostringstream error;
@@ -61,7 +61,7 @@ void Draw::notOk(RudeDrawerResponse resp)
     }
 }
 
-void Draw::connect()
+void Draw::connect() noexcept(false)
 {
     std::cout << "[INFO] Connecting to AppDrawer server...\n";
 
@@ -87,7 +87,7 @@ void Draw::connect()
     }
 }
 
-void Draw::ping()
+void Draw::ping() noexcept(false)
 {
     RudeDrawerCommand command;
     command.kind = RDCMD_PING;
@@ -99,7 +99,7 @@ void Draw::ping()
     notOk(response);
 }
 
-uint32_t Draw::addWindow(std::string title, uint32_t width, uint32_t height)
+uint32_t Draw::addWindow(std::string title, uint32_t width, uint32_t height) noexcept(false)
 {
     RudeDrawerCommand command;
     command.kind = RDCMD_ADD_WIN;
@@ -121,7 +121,7 @@ uint32_t Draw::addWindow(std::string title, uint32_t width, uint32_t height)
     return response.windowId;
 }
 
-void Draw::removeWindow(uint32_t id)
+void Draw::removeWindow(uint32_t id) noexcept(false)
 {
     RudeDrawerCommand command;
     command.kind = RDCMD_REMOVE_WIN;
@@ -134,7 +134,7 @@ void Draw::removeWindow(uint32_t id)
     notOk(response);
 }
 
-void Draw::startPollingEventsWindow(uint32_t id)
+void Draw::startPollingEventsWindow(uint32_t id) noexcept(false)
 {
     RudeDrawerCommand command;
     command.kind = RDCMD_START_POLLING_EVENTS_WIN;
@@ -147,7 +147,7 @@ void Draw::startPollingEventsWindow(uint32_t id)
     notOk(response);
 }
 
-void Draw::stopPollingEventsWindow(uint32_t id)
+void Draw::stopPollingEventsWindow(uint32_t id) noexcept(false)
 {
     RudeDrawerCommand command;
     command.kind = RDCMD_STOP_POLLING_EVENTS_WIN;
@@ -160,20 +160,20 @@ void Draw::stopPollingEventsWindow(uint32_t id)
     notOk(response);
 }
 
-RudeDrawerEvent Draw::pollEvent()
+RudeDrawerEvent Draw::pollEvent() noexcept(false)
 {
     RudeDrawerEvent event;
     recv(&event, sizeof(RudeDrawerEvent));
     return event;
 }
 
-Draw::~Draw() noexcept
+Draw::~Draw() noexcept(true)
 {
     std::cout << "[INFO] Closing connection\n";
     close(socket);
 }
 
-int main() noexcept
+int main() noexcept(true)
 {
     Draw draw;
     TRY(draw.connect());

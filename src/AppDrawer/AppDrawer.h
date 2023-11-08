@@ -11,18 +11,18 @@ private:
     uint32_t windowId = 1;
     int fd;
 
-    void listener() noexcept;
-    void handleClient(int clientFd) noexcept;
-    void pollEvents(Window* window, int clientFd) noexcept;
+    void listener() noexcept(true);
+    void handleClient(int clientFd) noexcept(true);
+    void pollEvents(Window* window, int clientFd) noexcept(true);
 public:
     std::mutex windowsMutex;
     std::vector<Window*> windows;
 
-    size_t findWindow(uint32_t id);
-    uint32_t addWindow(std::string title, uint32_t width, uint32_t height) noexcept;
-    void removeWindow(uint32_t id);
-    void setWindowPolling(uint32_t id, bool polling);
-    void startServer();
+    size_t findWindow(uint32_t id) noexcept(false);
+    uint32_t addWindow(std::string title, uint32_t width, uint32_t height) noexcept(true);
+    void removeWindow(uint32_t id) noexcept(false);
+    void setWindowPolling(uint32_t id, bool polling) noexcept(false);
+    void startServer() noexcept(false);
 
-    ~AppDrawer() noexcept;
+    ~AppDrawer() noexcept(true);
 };

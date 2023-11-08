@@ -6,7 +6,7 @@
 #include "RudeDrawer.h"
 #include "Util.h"
 
-int main() noexcept
+int main() noexcept(true)
 {
     signal(SIGPIPE, SIG_IGN);
 

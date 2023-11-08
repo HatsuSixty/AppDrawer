@@ -21,5 +21,5 @@ public:
     Rectangle area;
     WindowEvents events;
 
-    Window(std::string title, uint32_t width, uint32_t height, uint32_t id) noexcept;
+    Window(std::string title, uint32_t width, uint32_t height, uint32_t id) noexcept(true);
 };
