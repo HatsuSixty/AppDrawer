@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <thread>
+#include <mutex>
 
 #include "RudeDrawer.h"
 #include "Window.h"
@@ -177,6 +178,8 @@ void AppDrawer::pollEvents(Window* window, int clientFd) noexcept
 
 uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height) noexcept
 {
+    std::lock_guard<std::mutex> guard(windowsMutex);
+
     auto id = windowId++;
     Window* window = new Window(title, width, height, id);
     windows.push_back(window);
@@ -198,6 +201,8 @@ size_t AppDrawer::findWindow(uint32_t id)
 
 void AppDrawer::removeWindow(uint32_t id)
 {
+    std::lock_guard<std::mutex> guard(windowsMutex);
+
     auto i = findWindow(id);
 
     windows[i]->events.isPolling = false;

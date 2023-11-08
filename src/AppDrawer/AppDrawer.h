@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <mutex>
 
 #include "Window.h"
 
@@ -14,6 +15,7 @@ private:
     void handleClient(int clientFd) noexcept;
     void pollEvents(Window* window, int clientFd) noexcept;
 public:
+    std::mutex windowsMutex;
     std::vector<Window*> windows;
 
     size_t findWindow(uint32_t id);
