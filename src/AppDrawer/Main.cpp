@@ -61,7 +61,8 @@ int main() noexcept(true)
             DrawRectangleRec(closeButtonRect, RED);
 
             if (CheckCollisionPointRec(GetMousePosition(), closeButtonRect)
-                && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+                && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)
+                && w->active)
             {
                 std::cout << "[INFO] Sending close event to window of ID `"
                           << w->id << "`\n";

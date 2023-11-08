@@ -183,6 +183,7 @@ uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height
     auto id = windowId++;
     Window* window = new Window(title, width, height, id);
     windows.push_back(window);
+    changeActiveWindow(id);
     return id;
 }
 
@@ -210,6 +211,9 @@ void AppDrawer::removeWindow(uint32_t id) noexcept(false)
     // come up with
     for (size_t i = 0; i < 500; i++) asm("nop");
 
+    if (windows[i]->active && !windows.empty())
+        changeActiveWindow(windows.back()->id);
+
     std::free(windows[i]->pixels);
     delete windows[i];
     windows.erase(windows.begin() + i);
@@ -219,6 +223,25 @@ void AppDrawer::setWindowPolling(uint32_t id, bool polling) noexcept(false)
 {
     auto i = findWindow(id);
     windows[i]->events.isPolling = polling;
+}
+
+void AppDrawer::changeActiveWindow(uint32_t id) noexcept(false)
+{
+    auto fail = true;
+    for (auto& w : windows) {
+        if (w->id == id) {
+            w->active = true;
+            fail = false;
+        } else {
+            w->active = false;
+        }
+    }
+    if (fail) {
+        std::ostringstream error;
+        error << "ERROR: could not find window of ID `"
+              << id << "`";
+        throw std::runtime_error(error.str());
+    }
 }
 
 void AppDrawer::startServer() noexcept(false)
