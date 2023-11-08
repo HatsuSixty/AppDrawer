@@ -218,7 +218,7 @@ void AppDrawer::removeWindow(uint32_t id) noexcept(false)
     windows.erase(windows.begin() + i);
 
     if (isClosedWindowActive && !windows.empty())
-        changeActiveWindow(windows.back()->id);
+        changeActiveWindow(windows[0]->id);
 }
 
 void AppDrawer::setWindowPolling(uint32_t id, bool polling) noexcept(false)
