@@ -211,12 +211,14 @@ void AppDrawer::removeWindow(uint32_t id) noexcept(false)
     // come up with
     for (size_t i = 0; i < 500; i++) asm("nop");
 
-    if (windows[i]->active && !windows.empty())
-        changeActiveWindow(windows.back()->id);
+    auto isClosedWindowActive = windows[i]->active;
 
     std::free(windows[i]->pixels);
     delete windows[i];
     windows.erase(windows.begin() + i);
+
+    if (isClosedWindowActive && !windows.empty())
+        changeActiveWindow(windows.back()->id);
 }
 
 void AppDrawer::setWindowPolling(uint32_t id, bool polling) noexcept(false)
