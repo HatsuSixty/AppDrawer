@@ -18,6 +18,6 @@ $ meson compile -C build
 
 After [building](#building) AppDrawer, you can run TestClient to test it:
 ```console
-# ./build/src/TestClient/TestClient
+$ ./build/src/TestClient/TestClient
 ```
 If everything works correctly, it should open a window inside AppDrawer, and close it when you press Enter.
