@@ -210,7 +210,7 @@ void AppDrawer::removeWindow(uint32_t id)
     // come up with
     for (size_t i = 0; i < 500; i++) asm("nop");
 
-    free(windows[i]->pixels);
+    std::free(windows[i]->pixels);
     delete windows[i];
     windows.erase(windows.begin() + i);
 }
