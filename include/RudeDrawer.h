@@ -28,6 +28,7 @@ typedef enum {
 typedef enum {
     RDERROR_INVALID_COMMAND,
     RDERROR_INVALID_WINID,
+    RDERROR_ADD_WIN_FAILED,
     RDERROR_OK,
 } RudeDrawerErrorKind;
 

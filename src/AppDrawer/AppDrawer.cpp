@@ -98,7 +98,15 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
                       << command.windowWidth << "x" << command.windowHeight
                       << "\n";
             std::string title((char*)command.windowTitle);
-            auto id = addWindow(title, command.windowWidth, command.windowHeight);
+
+            uint32_t id;
+            try {
+                id = addWindow(title, command.windowWidth, command.windowHeight);
+            } catch (std::runtime_error const& e) {
+                std::cerr << e.what() << "\n";
+                if (!sendErrOrFail(clientFd, RDERROR_ADD_WIN_FAILED)) continue;
+                continue;
+            }
             std::cout << "    -> ID: " << id << "\n";
 
             RudeDrawerResponse response;
@@ -176,7 +184,7 @@ void AppDrawer::pollEvents(Window* window, int clientFd) noexcept(true)
     std::cout << "Exiting `pollEvents()` thread...\n";
 }
 
-uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height) noexcept(true)
+uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height) noexcept(false)
 {
     std::lock_guard<std::mutex> guard(windowsMutex);
 
@@ -213,7 +221,12 @@ void AppDrawer::removeWindow(uint32_t id) noexcept(false)
 
     auto isClosedWindowActive = windows[i]->active;
 
-    std::free(windows[i]->pixels);
+    try {
+        windows[i]->destroy();
+    } catch (std::runtime_error const& e) {
+        std::cerr << e.what() << "\n";
+        return;
+    }
     delete windows[i];
     windows.erase(windows.begin() + i);
 
@@ -285,7 +298,11 @@ void AppDrawer::startServer() noexcept(false)
 AppDrawer::~AppDrawer() noexcept(true)
 {
     for (auto& w : windows) {
-        free(w->pixels);
+        try {
+            w->destroy();
+        } catch (std::runtime_error const& e) {
+            std::cerr << e.what() << "\n";
+        }
     }
     close(fd);
 }

@@ -16,11 +16,17 @@ struct WindowEvents {
 class Window {
 public:
     std::string title;
+
     uint8_t* pixels;
+    std::string pixelsShmName;
+    int pixelsShmFd;
+    size_t pixelsShmSize;
+
     uint32_t id;
     Rectangle area;
     WindowEvents events;
     bool active;
 
-    Window(std::string title, uint32_t width, uint32_t height, uint32_t id) noexcept(true);
+    Window(std::string title, uint32_t width, uint32_t height, uint32_t id) noexcept(false);
+    void destroy() noexcept(false);
 };
