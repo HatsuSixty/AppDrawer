@@ -157,6 +157,30 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
             }
             if (!sendErrOrFail(clientFd, RDERROR_OK)) continue;
             break;
+        case RDCMD_GET_DISPLAY_SHM_WIN: {
+            std::cout << "  => Getting window display's shared memory\n";
+            std::cout << "    -> ID: " << command.windowId << "\n";
+            uint32_t i;
+            try {
+                i = findWindow(command.windowId);
+            } catch (std::runtime_error const& e) {
+                std::cerr << e.what() << "\n";
+                if (!sendErrOrFail(clientFd, RDERROR_INVALID_WINID)) continue;
+                continue;
+            }
+
+            auto shmName = windows[i]->pixelsShmName;
+
+            RudeDrawerResponse response;
+            response.kind = RDRESP_SHM_NAME;
+            response.errorKind = RDERROR_OK;
+
+            std::memset(response.windowShmName, 0, WINDOW_SHM_NAME_MAX);
+            std::memcpy(response.windowShmName, shmName.c_str(), shmName.size());
+
+            if (!sendOrFail(clientFd, &response, sizeof(RudeDrawerResponse)))
+                continue;
+        } break;
         default:
             std::cerr << "  => ERROR: unknown command `" << command.kind << "`\n";
             if (!sendErrOrFail(clientFd, RDERROR_INVALID_COMMAND)) continue;

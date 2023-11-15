@@ -7,9 +7,66 @@
 #include <sys/un.h>
 #include <cstring>
 #include <unistd.h>
+#include <fcntl.h>
+
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 #include "RudeDrawer.h"
 #include "Util.h"
+
+class Display {
+private:
+    int pixelsShmFd;
+    size_t pixelsShmSize;
+    uint32_t windowId;
+public:
+    uint8_t* pixels;
+
+    Display(std::string name, uint32_t width, uint32_t height, uint32_t id) noexcept(false);
+    void destroy() noexcept(false);
+};
+
+Display::Display(std::string name, uint32_t width, uint32_t height, uint32_t id) noexcept(false)
+{
+    windowId = id;
+
+    pixelsShmFd = shm_open(name.c_str(), O_RDWR, 0666);
+    if (pixelsShmFd == -1) {
+        std::ostringstream error;
+        error << "ERROR: could not open shared memory for window of ID `"
+              << windowId << "`: " << strerror(errno);
+        throw std::runtime_error(error.str());
+    }
+
+    pixelsShmSize = width * height * COMPONENTS;
+
+    pixels = (uint8_t*)mmap(NULL, pixelsShmSize, PROT_READ | PROT_WRITE,
+                            MAP_SHARED, pixelsShmFd, 0);
+    if (pixels == MAP_FAILED) {
+        std::ostringstream error;
+        error << "ERROR: could not mmap shared memory for window of ID `"
+              << windowId << "`: " << strerror(errno);
+        throw std::runtime_error(error.str());
+    }
+}
+
+void Display::destroy() noexcept(false)
+{
+    if (munmap(pixels, pixelsShmSize) == -1) {
+        std::ostringstream error;
+        error << "ERROR: could not munmap shared memory for window of ID `"
+              << windowId << "`: " << strerror(errno);
+        throw std::runtime_error(error.str());
+    }
+
+    if (close(pixelsShmFd) == -1) {
+        std::ostringstream error;
+        error << "ERROR: could not close shared memory for window of ID `"
+              << windowId << "`: " << strerror(errno);
+        throw std::runtime_error(error.str());
+    }
+}
 
 class Draw {
 private:
@@ -25,6 +82,7 @@ public:
     void removeWindow(uint32_t id) noexcept(false);
     void startPollingEventsWindow(uint32_t id) noexcept(false);
     void stopPollingEventsWindow(uint32_t id) noexcept(false);
+    Display* getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false);
     RudeDrawerEvent pollEvent() noexcept(false);
 
     ~Draw() noexcept(true);
@@ -105,7 +163,7 @@ uint32_t Draw::addWindow(std::string title, uint32_t width, uint32_t height) noe
     command.kind = RDCMD_ADD_WIN;
     command.windowWidth = width;
     command.windowHeight = height;
-    std::memset(command.windowTitle, 0, 256*sizeof(command.windowTitle[0]));
+    std::memset(command.windowTitle, 0, WINDOW_TITLE_MAX);
     std::memcpy(command.windowTitle, title.c_str(), title.size());
     send(&command, sizeof(RudeDrawerCommand));
 
@@ -160,6 +218,28 @@ void Draw::stopPollingEventsWindow(uint32_t id) noexcept(false)
     notOk(response);
 }
 
+Display* Draw::getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false)
+{
+    RudeDrawerCommand command;
+    command.kind = RDCMD_GET_DISPLAY_SHM_WIN;
+    command.windowId = id;
+    send(&command, sizeof(RudeDrawerCommand));
+
+    RudeDrawerResponse response;
+    recv(&response, sizeof(RudeDrawerResponse));
+
+    notOk(response);
+
+    if (response.kind != RDRESP_SHM_NAME) {
+        throw std::runtime_error("ERROR: response is not of kind `RDRESP_SHM_NAME`");
+    }
+
+    std::string shmName((char*)response.windowShmName);
+
+    auto display = new Display(shmName, dims.x, dims.y, id);
+    return display;
+}
+
 RudeDrawerEvent Draw::pollEvent() noexcept(false)
 {
     RudeDrawerEvent event;
@@ -182,6 +262,13 @@ int main() noexcept(true)
     uint32_t id;
     TRY(id = draw.addWindow("Test Client", 400, 400));
     std::cout << "Window ID: " << id << "\n";
+
+    Display* display = nullptr;
+    TRY(display = draw.getDisplay(id, (RudeDrawerVec2D) { .x = 400, .y = 400 }));
+    for (size_t i = 0; i < 400*400; ++i) {
+        ((uint32_t*)display->pixels)[i] = 0xFF0000FF;
+    }
+    display->destroy();
 
     TRY(draw.startPollingEventsWindow(id));
     bool quit = false;
