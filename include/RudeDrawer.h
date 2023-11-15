@@ -15,19 +15,18 @@ typedef enum {
     RDCMD_GET_DISPLAY_SHM_WIN,
 } RudeDrawerCommandKind;
 
-#define WINDOW_TITLE_MAX 256
-typedef struct {
-    RudeDrawerCommandKind kind;
-    uint32_t windowWidth;
-    uint32_t windowHeight;
-    char* windowTitle[WINDOW_TITLE_MAX];
-    uint32_t windowId;
-} RudeDrawerCommand;
-
 typedef struct {
     uint32_t x;
     uint32_t y;
 } RudeDrawerVec2D;
+
+#define WINDOW_TITLE_MAX 256
+typedef struct {
+    RudeDrawerCommandKind kind;
+    RudeDrawerVec2D windowDims;
+    char* windowTitle[WINDOW_TITLE_MAX];
+    uint32_t windowId;
+} RudeDrawerCommand;
 
 typedef enum {
     RDRESP_EMPTY,

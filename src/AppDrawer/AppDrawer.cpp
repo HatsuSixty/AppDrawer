@@ -95,13 +95,13 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
         case RDCMD_ADD_WIN: {
             std::cout << "  => Adding window\n";
             std::cout << "    -> Dimensions: "
-                      << command.windowWidth << "x" << command.windowHeight
+                      << command.windowDims.x << "x" << command.windowDims.y
                       << "\n";
             std::string title((char*)command.windowTitle);
 
             uint32_t id;
             try {
-                id = addWindow(title, command.windowWidth, command.windowHeight);
+                id = addWindow(title, command.windowDims);
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
                 if (!sendErrOrFail(clientFd, RDERROR_ADD_WIN_FAILED)) continue;
@@ -208,12 +208,12 @@ void AppDrawer::pollEvents(Window* window, int clientFd) noexcept(true)
     std::cout << "Exiting `pollEvents()` thread...\n";
 }
 
-uint32_t AppDrawer::addWindow(std::string title, uint32_t width, uint32_t height) noexcept(false)
+uint32_t AppDrawer::addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false)
 {
     std::lock_guard<std::mutex> guard(windowsMutex);
 
     auto id = windowId++;
-    Window* window = new Window(title, width, height, id);
+    Window* window = new Window(title, dims.x, dims.y, id);
     windows.push_back(window);
     changeActiveWindow(id);
     return id;

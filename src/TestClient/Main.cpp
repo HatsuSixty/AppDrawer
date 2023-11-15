@@ -78,7 +78,7 @@ private:
 public:
     void connect() noexcept(false);
     void ping() noexcept(false);
-    uint32_t addWindow(std::string title, uint32_t width, uint32_t height) noexcept(false);
+    uint32_t addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false);
     void removeWindow(uint32_t id) noexcept(false);
     void startPollingEventsWindow(uint32_t id) noexcept(false);
     void stopPollingEventsWindow(uint32_t id) noexcept(false);
@@ -157,12 +157,11 @@ void Draw::ping() noexcept(false)
     notOk(response);
 }
 
-uint32_t Draw::addWindow(std::string title, uint32_t width, uint32_t height) noexcept(false)
+uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false)
 {
     RudeDrawerCommand command;
     command.kind = RDCMD_ADD_WIN;
-    command.windowWidth = width;
-    command.windowHeight = height;
+    command.windowDims = dims;
     std::memset(command.windowTitle, 0, WINDOW_TITLE_MAX);
     std::memcpy(command.windowTitle, title.c_str(), title.size());
     send(&command, sizeof(RudeDrawerCommand));
@@ -259,16 +258,21 @@ int main() noexcept(true)
     TRY(draw.connect());
     TRY(draw.ping());
 
+    RudeDrawerVec2D dims = {
+        .x = 400,
+        .y = 400,
+    };
+
     uint32_t id;
-    TRY(id = draw.addWindow("Test Client", 400, 400));
+    TRY(id = draw.addWindow("Test Client", dims));
     std::cout << "Window ID: " << id << "\n";
 
     Display* display = nullptr;
-    TRY(display = draw.getDisplay(id, (RudeDrawerVec2D) { .x = 400, .y = 400 }));
-    for (size_t i = 0; i < 400*400; ++i) {
+    TRY(display = draw.getDisplay(id, dims));
+    for (size_t i = 0; i < dims.x*dims.y; ++i) {
         ((uint32_t*)display->pixels)[i] = 0xFF0000FF;
     }
-    display->destroy();
+    TRY(display->destroy());
 
     TRY(draw.startPollingEventsWindow(id));
     bool quit = false;
