@@ -7,6 +7,16 @@
 #include "RudeDrawer.h"
 #include "Window.h"
 
+class Connection {
+private:
+    int sockfd;
+public:
+    Connection(int sockfd) noexcept(true);
+    bool receiveOrFail(void* data, size_t n) noexcept(true);
+    bool sendOrFail(void* data, size_t n) noexcept(true);
+    bool sendErrOrFail(RudeDrawerErrorKind err) noexcept(true);
+};
+
 class AppDrawer {
 private:
     uint32_t windowId = 1;
@@ -14,7 +24,7 @@ private:
 
     void listener() noexcept(true);
     void handleClient(int clientFd) noexcept(true);
-    void pollEvents(Window* window, int clientFd) noexcept(true);
+    void pollEvents(Window* window, Connection& conn) noexcept(true);
 public:
     std::mutex windowsMutex;
     std::vector<Window*> windows;
