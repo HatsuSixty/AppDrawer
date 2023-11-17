@@ -24,32 +24,32 @@ Connection::Connection(int sockfd) noexcept(true)
     this->sockfd = sockfd;
 }
 
-bool Connection::receiveOrFail(void* data, size_t n) noexcept(true)
+ConnectionResult Connection::receiveOrFail(void* data, size_t n) noexcept(true)
 {
     int numBytesReceived = recv(sockfd, data, n, 0);
     if (numBytesReceived < 0) {
         std::cerr << "ERROR: could not receive bytes from socket: "
                   << strerror(errno) << "\n";
-        return false;
+        return CONN_ERR;
     }
     else if (numBytesReceived == 0) {
         std::cout << "[INFO] Connection closed by client\n";
-        return false;
+        return CONN_CLOSED;
     }
-    return true;
+    return CONN_OK;
 }
 
-bool Connection::sendOrFail(void* data, size_t n) noexcept(true)
+ConnectionResult Connection::sendOrFail(void* data, size_t n) noexcept(true)
 {
     if (send(sockfd, data, n, 0) < 0) {
         std::cerr << "ERROR: could not send data to the client: "
                   << strerror(errno) << "\n";
-        return false;
+        return CONN_ERR;
     }
-    return true;
+    return CONN_OK;
 }
 
-bool Connection::sendErrOrFail(RudeDrawerErrorKind err) noexcept(true)
+ConnectionResult Connection::sendErrOrFail(RudeDrawerErrorKind err) noexcept(true)
 {
     RudeDrawerResponse response;
     response.kind = RDRESP_EMPTY;
@@ -89,7 +89,7 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
 
     RudeDrawerCommand command;
     while (true) {
-        if (!conn.receiveOrFail(&command, sizeof(RudeDrawerCommand))) {
+        if (conn.receiveOrFail(&command, sizeof(RudeDrawerCommand)) != CONN_OK) {
             goto exit;
         }
 
@@ -97,7 +97,7 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
         switch (command.kind) {
         case RDCMD_PING:
             std::cout << "  => Pong!\n";
-            if (!conn.sendErrOrFail(RDERROR_OK)) continue;
+            if (conn.sendErrOrFail(RDERROR_OK) != CONN_OK) continue;
             break;
         case RDCMD_ADD_WIN: {
             std::cout << "  => Adding window\n";
@@ -111,7 +111,7 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
                 id = addWindow(title, command.windowDims);
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
-                if (!conn.sendErrOrFail(RDERROR_ADD_WIN_FAILED)) continue;
+                if (conn.sendErrOrFail(RDERROR_ADD_WIN_FAILED) != CONN_OK) continue;
                 continue;
             }
             std::cout << "    -> ID: " << id << "\n";
@@ -120,7 +120,7 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
             response.kind = RDRESP_WINID;
             response.errorKind = RDERROR_OK;
             response.windowId = id;
-            if (!conn.sendOrFail(&response, sizeof(RudeDrawerResponse)))
+            if (conn.sendOrFail(&response, sizeof(RudeDrawerResponse)) != CONN_OK)
                 continue;
         } break;
         case RDCMD_REMOVE_WIN:
@@ -130,10 +130,10 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
                 removeWindow(command.windowId);
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
-                if (!conn.sendErrOrFail(RDERROR_INVALID_WINID)) continue;
+                if (conn.sendErrOrFail(RDERROR_INVALID_WINID) != CONN_OK) continue;
                 continue;
             }
-            if (!conn.sendErrOrFail(RDERROR_OK)) continue;
+            if (conn.sendErrOrFail(RDERROR_OK) != CONN_OK) continue;
             break;
         case RDCMD_START_POLLING_EVENTS_WIN: {
             std::cout << "  => Starting polling events for window\n";
@@ -147,11 +147,11 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
                 thread.detach();
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
-                if (!conn.sendErrOrFail(RDERROR_INVALID_WINID)) continue;
+                if (conn.sendErrOrFail(RDERROR_INVALID_WINID) != CONN_OK) continue;
                 continue;
             }
 
-            if (!conn.sendErrOrFail(RDERROR_OK)) continue;
+            if (conn.sendErrOrFail(RDERROR_OK) != CONN_OK) continue;
         } break;
         case RDCMD_STOP_POLLING_EVENTS_WIN:
             std::cout << "  => Stopping polling events for window\n";
@@ -160,10 +160,10 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
                 setWindowPolling(command.windowId, false);
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
-                if (!conn.sendErrOrFail(RDERROR_INVALID_WINID)) continue;
+                if (conn.sendErrOrFail(RDERROR_INVALID_WINID) != CONN_OK) continue;
                 continue;
             }
-            if (!conn.sendErrOrFail(RDERROR_OK)) continue;
+            if (conn.sendErrOrFail(RDERROR_OK) != CONN_OK) continue;
             break;
         case RDCMD_GET_DISPLAY_SHM_WIN: {
             std::cout << "  => Getting window display's shared memory\n";
@@ -173,7 +173,7 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
                 i = findWindow(command.windowId);
             } catch (std::runtime_error const& e) {
                 std::cerr << e.what() << "\n";
-                if (!conn.sendErrOrFail(RDERROR_INVALID_WINID)) continue;
+                if (conn.sendErrOrFail(RDERROR_INVALID_WINID) != CONN_OK) continue;
                 continue;
             }
 
@@ -186,12 +186,12 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
             std::memset(response.windowShmName, 0, WINDOW_SHM_NAME_MAX);
             std::memcpy(response.windowShmName, shmName.c_str(), shmName.size());
 
-            if (!conn.sendOrFail(&response, sizeof(RudeDrawerResponse)))
+            if (conn.sendOrFail(&response, sizeof(RudeDrawerResponse)) != CONN_OK)
                 continue;
         } break;
         default:
             std::cerr << "  => ERROR: unknown command `" << command.kind << "`\n";
-            if (!conn.sendErrOrFail(RDERROR_INVALID_COMMAND)) continue;
+            if (conn.sendErrOrFail(RDERROR_INVALID_COMMAND) != CONN_OK) continue;
         }
     }
 
@@ -206,7 +206,7 @@ void AppDrawer::pollEvents(Window* window, Connection& conn) noexcept(true)
             auto event = window->events.events.back();
             window->events.events.pop_back();
 
-            if (!conn.sendOrFail(&event, sizeof(RudeDrawerEvent)))
+            if (conn.sendOrFail(&event, sizeof(RudeDrawerEvent)) != CONN_OK)
                 continue;
 
             std::cout << "!!! Received event: "

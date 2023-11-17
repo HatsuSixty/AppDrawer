@@ -7,14 +7,20 @@
 #include "RudeDrawer.h"
 #include "Window.h"
 
+enum ConnectionResult {
+    CONN_CLOSED,
+    CONN_OK,
+    CONN_ERR,
+};
+
 class Connection {
 private:
     int sockfd;
 public:
     Connection(int sockfd) noexcept(true);
-    bool receiveOrFail(void* data, size_t n) noexcept(true);
-    bool sendOrFail(void* data, size_t n) noexcept(true);
-    bool sendErrOrFail(RudeDrawerErrorKind err) noexcept(true);
+    ConnectionResult receiveOrFail(void* data, size_t n) noexcept(true);
+    ConnectionResult sendOrFail(void* data, size_t n) noexcept(true);
+    ConnectionResult sendErrOrFail(RudeDrawerErrorKind err) noexcept(true);
 };
 
 class AppDrawer {
