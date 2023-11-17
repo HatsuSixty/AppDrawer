@@ -7,20 +7,20 @@
 #include "RudeDrawer.h"
 #include "Window.h"
 
-enum ConnectionResult {
-    CONN_CLOSED,
-    CONN_OK,
-    CONN_ERR,
+enum ClientResult {
+    CLIENT_CLOSED,
+    CLIENT_OK,
+    CLIENT_ERR,
 };
 
-class Connection {
+class Client {
 private:
     int sockfd;
 public:
-    Connection(int sockfd) noexcept(true);
-    ConnectionResult receiveOrFail(void* data, size_t n) noexcept(true);
-    ConnectionResult sendOrFail(void* data, size_t n) noexcept(true);
-    ConnectionResult sendErrOrFail(RudeDrawerErrorKind err) noexcept(true);
+    Client(int sockfd) noexcept(true);
+    ClientResult receiveOrFail(void* data, size_t n) noexcept(true);
+    ClientResult sendOrFail(void* data, size_t n) noexcept(true);
+    ClientResult sendErrOrFail(RudeDrawerErrorKind err) noexcept(true);
 };
 
 class AppDrawer {
@@ -30,7 +30,7 @@ private:
 
     void listener() noexcept(true);
     void handleClient(int clientFd) noexcept(true);
-    void pollEvents(Window* window, Connection& conn) noexcept(true);
+    void pollEvents(Window* window, Client& client) noexcept(true);
 public:
     std::mutex windowsMutex;
     std::vector<Window*> windows;
