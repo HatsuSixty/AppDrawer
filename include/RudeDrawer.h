@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
+#include <stdbool.h>
 
 #define SOCKET_PATH "/tmp/AppDrawer.sock"
 // RGBA
@@ -27,6 +28,7 @@ typedef struct {
     RudeDrawerVec2D windowDims;
     char* windowTitle[WINDOW_TITLE_MAX];
     uint32_t windowId;
+    bool windowAlwaysUpdating;
 } RudeDrawerCommand;
 
 typedef enum {

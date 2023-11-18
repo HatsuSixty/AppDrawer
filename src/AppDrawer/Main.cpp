@@ -25,6 +25,19 @@ int main() noexcept(true)
         for (auto& w : appdrawer->windows) {
             BeginScissorMode(w->area.x, w->area.y, w->area.width, w->area.height);
 
+            // Send paint event to window
+            if (w->alwaysUpdating) {
+                std::cout << "[INFO] Sending paint event to window of ID `"
+                          << w->id << "`\n";
+                if (w->events.isPolling) {
+                    RudeDrawerEvent event;
+                    event.kind = RDEVENT_PAINT;
+                    w->events.events.push_back(event);
+                } else {
+                    std::cout << "[WARN] Window not polling events, not sending...\n";
+                }
+            }
+
             // Draw content
             Image image = {
                 .data = w->pixels,

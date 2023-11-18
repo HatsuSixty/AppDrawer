@@ -79,7 +79,7 @@ private:
 public:
     void connect() noexcept(false);
     void ping() noexcept(false);
-    uint32_t addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false);
+    uint32_t addWindow(std::string title, RudeDrawerVec2D dims, bool alwaysUpdating) noexcept(false);
     void removeWindow(uint32_t id) noexcept(false);
     void startPollingEventsWindow(uint32_t id) noexcept(false);
     void stopPollingEventsWindow(uint32_t id) noexcept(false);
@@ -158,11 +158,12 @@ void Draw::ping() noexcept(false)
     NOTOK(response);
 }
 
-uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false)
+uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims, bool alwaysUpdating) noexcept(false)
 {
     RudeDrawerCommand command;
     command.kind = RDCMD_ADD_WIN;
     command.windowDims = dims;
+    command.windowAlwaysUpdating = alwaysUpdating;
     std::memset(command.windowTitle, 0, WINDOW_TITLE_MAX);
     std::memcpy(command.windowTitle, title.c_str(), title.size());
     send(&command, sizeof(RudeDrawerCommand));
@@ -281,7 +282,7 @@ int main() noexcept(true)
     };
 
     uint32_t id;
-    TRY(id = draw.addWindow("Test Client", dims));
+    TRY(id = draw.addWindow("Test Client", dims, true));
     std::cout << "Window ID: " << id << "\n";
 
     Display* display = nullptr;
@@ -293,8 +294,8 @@ int main() noexcept(true)
 
     TRY(draw.startPollingEventsWindow(id));
 
-    std::thread thread(&sendPaintEvents, std::ref(draw), id);
-    thread.detach();
+    //std::thread thread(&sendPaintEvents, std::ref(draw), id);
+    //thread.detach();
 
     bool quit = false;
     while (!quit) {
