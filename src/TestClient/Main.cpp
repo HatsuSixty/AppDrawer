@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
@@ -223,11 +224,6 @@ void Draw::sendPaintEvent(uint32_t id) noexcept(false)
     command.kind = RDCMD_SEND_PAINT_EVENT;
     command.windowId = id;
     send(&command, sizeof(RudeDrawerCommand));
-
-    RudeDrawerResponse response;
-    recv(&response, sizeof(RudeDrawerResponse));
-
-    NOTOK(response);
 }
 
 Display* Draw::getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false)
@@ -267,7 +263,10 @@ Draw::~Draw() noexcept(true)
 
 void sendPaintEvents(Draw& draw, uint32_t id)
 {
-    draw.sendPaintEvent(id);
+    while (true) {
+        draw.sendPaintEvent(id);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }
 
 int main() noexcept(true)

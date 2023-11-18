@@ -202,8 +202,6 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
                 continue;
             }
 
-            if (client.sendErrOrFail(RDERROR_OK) != CLIENT_OK) continue;
-
             if (windows[i]->events.isPolling) {
                 RudeDrawerEvent event;
                 event.kind = RDEVENT_PAINT;
