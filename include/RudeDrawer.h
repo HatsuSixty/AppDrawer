@@ -13,6 +13,7 @@ typedef enum {
     RDCMD_START_POLLING_EVENTS_WIN,
     RDCMD_STOP_POLLING_EVENTS_WIN,
     RDCMD_GET_DISPLAY_SHM_WIN,
+    RDCMD_SEND_PAINT_EVENT,
 } RudeDrawerCommandKind;
 
 typedef struct {
@@ -54,6 +55,7 @@ typedef struct {
 typedef enum {
     RDEVENT_NONE,
     RDEVENT_CLOSE_WIN,
+    RDEVENT_PAINT,
 } RudeDrawerEventKind;
 
 typedef struct {

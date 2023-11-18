@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
@@ -8,6 +9,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
+#include <thread>
 
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -74,7 +76,6 @@ private:
 
     void send(void* data, size_t n) noexcept(false);
     void recv(void* data, size_t n) noexcept(false);
-    void notOk(RudeDrawerResponse resp) noexcept(false);
 public:
     void connect() noexcept(false);
     void ping() noexcept(false);
@@ -82,6 +83,7 @@ public:
     void removeWindow(uint32_t id) noexcept(false);
     void startPollingEventsWindow(uint32_t id) noexcept(false);
     void stopPollingEventsWindow(uint32_t id) noexcept(false);
+    void sendPaintEvent(uint32_t id) noexcept(false);
     Display* getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false);
     RudeDrawerEvent pollEvent() noexcept(false);
 
@@ -110,14 +112,13 @@ void Draw::recv(void* data, size_t n) noexcept(false)
     }
 }
 
-void Draw::notOk(RudeDrawerResponse resp) noexcept(false)
-{
-    if (resp.errorKind != RDERROR_OK) {
-        std::ostringstream error;
-        error << "ERROR: Not OK: Code " << resp.errorKind;
-        throw std::runtime_error(error.str());
-    }
-}
+#define NOTOK(resp)                                     \
+    if ((resp).errorKind != RDERROR_OK) {               \
+        std::ostringstream error;                       \
+        error << "ERROR: " << __FUNCTION__              \
+              << ": Not OK: Code " << (resp).errorKind; \
+        throw std::runtime_error(error.str());          \
+    }                                                   \
 
 void Draw::connect() noexcept(false)
 {
@@ -154,7 +155,7 @@ void Draw::ping() noexcept(false)
     RudeDrawerResponse response;
     recv(&response, sizeof(RudeDrawerResponse));
 
-    notOk(response);
+    NOTOK(response);
 }
 
 uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false)
@@ -169,7 +170,7 @@ uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false
     RudeDrawerResponse response;
     recv(&response, sizeof(RudeDrawerResponse));
 
-    notOk(response);
+    NOTOK(response);
 
     if (response.kind != RDRESP_WINID) {
         throw std::runtime_error("ERROR: response is not of kind `RDRESP_WINID`");
@@ -188,7 +189,7 @@ void Draw::removeWindow(uint32_t id) noexcept(false)
     RudeDrawerResponse response;
     recv(&response, sizeof(RudeDrawerResponse));
 
-    notOk(response);
+    NOTOK(response);
 }
 
 void Draw::startPollingEventsWindow(uint32_t id) noexcept(false)
@@ -201,7 +202,7 @@ void Draw::startPollingEventsWindow(uint32_t id) noexcept(false)
     RudeDrawerResponse response;
     recv(&response, sizeof(RudeDrawerResponse));
 
-    notOk(response);
+    NOTOK(response);
 }
 
 void Draw::stopPollingEventsWindow(uint32_t id) noexcept(false)
@@ -214,7 +215,15 @@ void Draw::stopPollingEventsWindow(uint32_t id) noexcept(false)
     RudeDrawerResponse response;
     recv(&response, sizeof(RudeDrawerResponse));
 
-    notOk(response);
+    NOTOK(response);
+}
+
+void Draw::sendPaintEvent(uint32_t id) noexcept(false)
+{
+    RudeDrawerCommand command;
+    command.kind = RDCMD_SEND_PAINT_EVENT;
+    command.windowId = id;
+    send(&command, sizeof(RudeDrawerCommand));
 }
 
 Display* Draw::getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false)
@@ -227,7 +236,7 @@ Display* Draw::getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false)
     RudeDrawerResponse response;
     recv(&response, sizeof(RudeDrawerResponse));
 
-    notOk(response);
+    NOTOK(response);
 
     if (response.kind != RDRESP_SHM_NAME) {
         throw std::runtime_error("ERROR: response is not of kind `RDRESP_SHM_NAME`");
@@ -250,6 +259,14 @@ Draw::~Draw() noexcept(true)
 {
     std::cout << "[INFO] Closing connection\n";
     close(socket);
+}
+
+void sendPaintEvents(Draw& draw, uint32_t id)
+{
+    while (true) {
+        draw.sendPaintEvent(id);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }
 
 int main() noexcept(true)
@@ -275,12 +292,19 @@ int main() noexcept(true)
     TRY(display->destroy());
 
     TRY(draw.startPollingEventsWindow(id));
+
+    std::thread thread(&sendPaintEvents, std::ref(draw), id);
+    thread.detach();
+
     bool quit = false;
     while (!quit) {
         auto event = draw.pollEvent();
         switch (event.kind) {
         case RDEVENT_NONE:
             std::cout << "WTF None event!!??\n";
+            break;
+        case RDEVENT_PAINT:
+            std::cout << "Paint event!!\n";
             break;
         case RDEVENT_CLOSE_WIN:
             std::cout << "Received close window event\n";
