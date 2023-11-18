@@ -189,6 +189,29 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
             if (client.sendOrFail(&response, sizeof(RudeDrawerResponse)) != CLIENT_OK)
                 continue;
         } break;
+        case RDCMD_SEND_PAINT_EVENT: {
+            std::cout << "  => Sending paint event to window\n";
+            std::cout << "    -> ID: " << command.windowId << "\n";
+
+            uint32_t i;
+            try {
+                i = findWindow(command.windowId);
+            } catch (std::runtime_error const& e) {
+                std::cerr << e.what() << "\n";
+                if (client.sendErrOrFail(RDERROR_INVALID_WINID) != CLIENT_OK) continue;
+                continue;
+            }
+
+            if (client.sendErrOrFail(RDERROR_OK) != CLIENT_OK) continue;
+
+            if (windows[i]->events.isPolling) {
+                RudeDrawerEvent event;
+                event.kind = RDEVENT_PAINT;
+                windows[i]->events.events.push_back(event);
+            } else {
+                std::cout << "[WARN] Window not polling events, not sending...\n";
+            }
+        } break;
         default:
             std::cerr << "  => ERROR: unknown command `" << command.kind << "`\n";
             if (client.sendErrOrFail(RDERROR_INVALID_COMMAND) != CLIENT_OK) continue;
