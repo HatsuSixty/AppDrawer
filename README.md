@@ -4,7 +4,8 @@ A simple display server.
 
 ## Quick Start
 
-A guide on how to build and test AppDrawer.
+A guide on how to build and test AppDrawer.  
+If you want to know how to write an application for AppDrawer, read [TestClient's README.md](./src/TestClient/README.md).
 
 ### Building
 
