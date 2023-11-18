@@ -20,4 +20,5 @@ All AppDrawer commands (except `sendPaintEvent`) are **NOT** thread safe. This m
 ### Events
 
 To make the server start sending events, the `startPollingEventsWindow` and `stopPollingEventsWindow` methods are available, and to actually receive the events, use `pollEvent` in a loop.  
-**Keep in mind that not receiving the events after calling `startPollingEventsWindow` leads to undefined behavior on the client side.**
+**Keep in mind that not receiving the events after calling `startPollingEventsWindow` leads to undefined behavior on the client side.**  
+**Also, multiple calls to `sendPaintEvent` in a very short amount of time is not recommended.**
