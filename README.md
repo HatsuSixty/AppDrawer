@@ -5,7 +5,7 @@ A simple display server.
 ## Quick Start
 
 A guide on how to build and test AppDrawer.  
-If you want to know how to write an application for AppDrawer, read [TestClient's README.md](./src/TestClient/README.md).
+If you want to know how to write an application for AppDrawer, read [LibDraw's README.md](./LibDraw/README.md), or an [example](./Example)'s source code.
 
 ### Building
 
@@ -17,8 +17,12 @@ $ meson compile -C build
 
 ### Testing
 
-After [building](#building) AppDrawer, you can run TestClient to test it:
+After [building](#building) AppDrawer, you can run AppDrawer & TestClient to test it:
 ```console
-$ ./build/src/TestClient/TestClient
+$ ./build/AppDrawer/AppDrawer
 ```
-If everything works correctly, it should open a window inside AppDrawer, and close it when you press Enter.
+On another terminal:
+```console
+$ ./build/TestClient/TestClient
+```
+If everything works correctly, it should open a window inside AppDrawer, and close it when you click the close button.
