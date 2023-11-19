@@ -5,4 +5,5 @@ project('AppDrawer', 'cpp',
 incdir = include_directories('include')
 
 subdir('src/AppDrawer')
+subdir('src/LibDraw')
 subdir('src/TestClient')
