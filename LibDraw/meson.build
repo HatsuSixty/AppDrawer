@@ -1,4 +1,4 @@
-libdraw_incdir = include_directories('include')
+libdraw_incdir = include_directories('Include')
 
 libdraw = library('Draw', [
   'Display.cpp',
