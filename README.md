@@ -26,3 +26,7 @@ On another terminal:
 $ ./build/TestClient/TestClient
 ```
 If everything works correctly, it should open a window inside AppDrawer, and close it when you click the close button.
+
+## Credits
+
+[olive.c](./TestClient/olive.c) - By Tsoding: https://github.com/tsoding/olive.c
