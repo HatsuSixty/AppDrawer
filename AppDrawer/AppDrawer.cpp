@@ -202,13 +202,9 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
                 continue;
             }
 
-            if (windows[i]->events.isPolling) {
-                RudeDrawerEvent event;
-                event.kind = RDEVENT_PAINT;
-                windows[i]->events.events.push_back(event);
-            } else {
-                std::cout << "[WARN] Window not polling events, not sending...\n";
-            }
+            RudeDrawerEvent event;
+            event.kind = RDEVENT_PAINT;
+            windows[i]->sendEvent(event);
         } break;
         default:
             std::cerr << "  => ERROR: unknown command `" << command.kind << "`\n";
@@ -229,9 +225,6 @@ void AppDrawer::pollEvents(Window* window, Client& client) noexcept(true)
 
             if (client.sendOrFail(&event, sizeof(RudeDrawerEvent)) != CLIENT_OK)
                 continue;
-
-            std::cout << "!!! Received event: "
-                      << event.kind << "\n";
         }
     }
     std::cout << "Exiting `pollEvents()` thread...\n";

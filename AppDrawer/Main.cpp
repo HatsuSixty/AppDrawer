@@ -27,15 +27,9 @@ int main() noexcept(true)
 
             // Send paint event to window
             if (w->alwaysUpdating) {
-                std::cout << "[INFO] Sending paint event to window of ID `"
-                          << w->id << "`\n";
-                if (w->events.isPolling) {
-                    RudeDrawerEvent event;
-                    event.kind = RDEVENT_PAINT;
-                    w->events.events.push_back(event);
-                } else {
-                    std::cout << "[WARN] Window not polling events, not sending...\n";
-                }
+                RudeDrawerEvent event;
+                event.kind = RDEVENT_PAINT;
+                w->sendEvent(event);
             }
 
             // Draw content
@@ -77,15 +71,9 @@ int main() noexcept(true)
                 && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)
                 && w->active)
             {
-                std::cout << "[INFO] Sending close event to window of ID `"
-                          << w->id << "`\n";
-                if (w->events.isPolling) {
-                    RudeDrawerEvent event;
-                    event.kind = RDEVENT_CLOSE_WIN;
-                    w->events.events.push_back(event);
-                } else {
-                    std::cout << "[WARN] Window not polling events, not sending...\n";
-                }
+                RudeDrawerEvent event;
+                event.kind = RDEVENT_CLOSE_WIN;
+                w->sendEvent(event);
             }
         }
         appdrawer->windowsMutex.unlock();

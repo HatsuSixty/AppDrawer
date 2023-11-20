@@ -29,5 +29,6 @@ public:
     bool alwaysUpdating;
 
     Window(std::string title, uint32_t width, uint32_t height, uint32_t id, bool alwaysUpdating) noexcept(false);
+    void sendEvent(RudeDrawerEvent event) noexcept(true);
     void destroy() noexcept(false);
 };

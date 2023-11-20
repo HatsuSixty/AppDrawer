@@ -14,6 +14,7 @@
 #include <unistd.h>
 
 #include "Consts.h"
+#include "RudeDrawer.h"
 
 Window::Window(std::string title, uint32_t width, uint32_t height, uint32_t id, bool alwaysUpdating) noexcept(false)
 {
@@ -52,6 +53,21 @@ Window::Window(std::string title, uint32_t width, uint32_t height, uint32_t id, 
     }
 
     std::memset(pixels, 0xFF, pixelsShmSize);
+}
+
+#define DEBUG_PAINT_EVENT false
+
+void Window::sendEvent(RudeDrawerEvent event) noexcept(true)
+{
+    if (event.kind != RDEVENT_PAINT || DEBUG_PAINT_EVENT)
+        std::cout << "[INFO] Sending event of ID `" << event.kind
+                  << "` to window of ID `" << id << "`\n";
+    if (events.isPolling) {
+        events.events.push_back(event);
+    } else {
+        if (event.kind != RDEVENT_PAINT || DEBUG_PAINT_EVENT)
+            std::cout << "[WARN] Window not polling events, not sending...\n";
+    }
 }
 
 void Window::destroy() noexcept(false)
