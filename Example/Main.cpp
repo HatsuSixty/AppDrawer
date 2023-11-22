@@ -5,6 +5,11 @@
 
 #include <iostream>
 
+struct CallbackParameters {
+    DrawVec2D dims;
+    uint8_t* pixels;
+};
+
 int main()
 {
     Draw draw;
@@ -20,6 +25,25 @@ int main()
 
     Display* display = draw.getDisplay(id, dims);
 
+    CallbackParameters parameters = {
+        .dims = dims,
+        .pixels = display->pixels,
+    };
+
+    draw.setPaintCallback(id, [](void* p) {
+        auto params = (CallbackParameters*)p;
+        // This function is called everytime a frame needs to be updated
+        // if the last parameter of `Draw::addWindow()` is `true`, this
+        // function is called at every frame, else, it is called everytime
+        // the client calls `Draw::sendPaintEvent()`
+        for (size_t x = 0; x < params->dims.x; ++x) {
+            for (size_t y = 0; y < params->dims.y; ++y) {
+                // 0xFFFF0000 = blue
+                ((uint32_t*)params->pixels)[x*params->dims.x+y] = 0xFFFF0000;
+            }
+        }
+    }, &parameters);
+
     draw.startPollingEventsWindow(id);
     bool quit = false;
     while (!quit) {
@@ -28,17 +52,16 @@ int main()
         case RDEVENT_CLOSE_WIN:
             quit = true;
             break;
-        case RDEVENT_PAINT: {
-            // The client should update its window's contents at every
-            // paint event
-        } break;
         default:
             break;
         }
     }
     draw.stopPollingEventsWindow(id);
-    draw.removeWindow(id);
 
+    draw.removePaintCallback(id);
+
+    draw.removeWindow(id);
     display->destroy();
+
     return 0;
 }
