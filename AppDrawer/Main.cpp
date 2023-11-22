@@ -25,13 +25,6 @@ int main() noexcept(true)
         for (auto& w : appdrawer->windows) {
             BeginScissorMode(w->area.x, w->area.y, w->area.width, w->area.height);
 
-            // Send paint event to window
-            if (w->alwaysUpdating) {
-                RudeDrawerEvent event;
-                event.kind = RDEVENT_PAINT;
-                w->sendEvent(event);
-            }
-
             // Draw content
             Image image = {
                 .data = w->pixels,

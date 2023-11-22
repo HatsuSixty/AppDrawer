@@ -1,4 +1,6 @@
+#include <chrono>
 #include <iostream>
+#include <thread>
 
 #include "LibDraw/Draw.h"
 #include "LibDraw/Display.h"
@@ -14,6 +16,15 @@
 #pragma clang diagnostic pop
 
 #include "Util.h"
+
+typedef struct {
+    size_t* rectX;
+    size_t* rectDirX;
+    size_t* rectY;
+    size_t* rectDirY;
+    Olivec_Canvas canvas;
+    DrawVec2D dims;
+} CallbackParameters;
 
 int main() noexcept(true)
 {
@@ -42,34 +53,50 @@ int main() noexcept(true)
     size_t rectDirX = RECT_SPD;
     size_t rectDirY = -RECT_SPD;
 
+    CallbackParameters params = {
+        .rectX = &rectX,
+        .rectDirX = &rectDirX,
+        .rectY = &rectY,
+        .rectDirY = &rectDirY,
+        .canvas = canvas,
+        .dims = dims,
+    };
+
+    draw.setPaintCallback(id, [](void* p) {
+        auto params = (CallbackParameters*)p;
+        olivec_fill(params->canvas, 0xFF181818);
+
+        if (*params->rectX + RECT_WIDTH >= params->dims.x || *params->rectX <= 0)
+            *params->rectDirX = -(*params->rectDirX);
+        if (*params->rectY + RECT_HEIGHT >= params->dims.y || *params->rectY <= 0)
+            *params->rectDirY = -(*params->rectDirY);
+
+        *params->rectX += *params->rectDirX;
+        *params->rectY += *params->rectDirY;
+
+        olivec_rect(params->canvas, *params->rectX, *params->rectY,
+                    RECT_WIDTH, RECT_HEIGHT, 0xFF00FFFF);
+    }, &params);
+
     TRY(draw.startPollingEventsWindow(id));
     bool quit = false;
     while (!quit) {
-        auto event = draw.pollEvent();
+        auto event = draw.pollEvent(id);
         switch (event.kind) {
         case RDEVENT_NONE:
             std::cout << "WTF None event!!??\n";
             break;
-        case RDEVENT_PAINT: {
-            olivec_fill(canvas, 0xFF181818);
-
-            if (rectX + RECT_WIDTH >= dims.x || rectX <= 0)
-                rectDirX = -rectDirX;
-            if (rectY + RECT_HEIGHT >= dims.y || rectY <= 0)
-                rectDirY = -rectDirY;
-
-            rectX += rectDirX;
-            rectY += rectDirY;
-
-            olivec_rect(canvas, rectX, rectY, RECT_WIDTH, RECT_HEIGHT, 0xFF00FFFF);
-        } break;
         case RDEVENT_CLOSE_WIN:
             std::cout << "Received close window event\n";
             quit = true;
             break;
+        default:
+            break;
         }
     }
     TRY(draw.stopPollingEventsWindow(id));
+
+    draw.removePaintCallback(id);
 
     TRY(display->destroy());
     TRY(draw.removeWindow(id));

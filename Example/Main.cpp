@@ -23,7 +23,7 @@ int main()
     draw.startPollingEventsWindow(id);
     bool quit = false;
     while (!quit) {
-        auto event = draw.pollEvent();
+        auto event = draw.pollEvent(id);
         switch (event.kind) {
         case RDEVENT_CLOSE_WIN:
             quit = true;

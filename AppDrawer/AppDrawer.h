@@ -36,7 +36,7 @@ public:
     std::vector<Window*> windows;
 
     size_t findWindow(uint32_t id) noexcept(false);
-    uint32_t addWindow(std::string title, RudeDrawerVec2D dims, bool alwaysUpdating) noexcept(false);
+    uint32_t addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false);
     void removeWindow(uint32_t id) noexcept(false);
     void setWindowPolling(uint32_t id, bool polling) noexcept(false);
     void changeActiveWindow(uint32_t id) noexcept(false);

@@ -28,7 +28,6 @@ typedef struct {
     RudeDrawerVec2D windowDims;
     char* windowTitle[WINDOW_TITLE_MAX];
     uint32_t windowId;
-    bool windowAlwaysUpdating;
 } RudeDrawerCommand;
 
 typedef enum {

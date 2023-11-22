@@ -16,7 +16,7 @@
 #include "Consts.h"
 #include "RudeDrawer.h"
 
-Window::Window(std::string title, uint32_t width, uint32_t height, uint32_t id, bool alwaysUpdating) noexcept(false)
+Window::Window(std::string title, uint32_t width, uint32_t height, uint32_t id) noexcept(false)
 {
     this->title = title;
     area.width = width;
@@ -24,7 +24,6 @@ Window::Window(std::string title, uint32_t width, uint32_t height, uint32_t id, 
     area.x = (float)WIDTH / 2 - (float)width / 2;
     area.y = (float)HEIGHT / 2 - (float)height / 2;
     this->id = id;
-    this->alwaysUpdating = alwaysUpdating;
 
     pixelsShmSize = width * height * COMPONENTS;
     pixelsShmName = "/APDWindow" + std::to_string(id);

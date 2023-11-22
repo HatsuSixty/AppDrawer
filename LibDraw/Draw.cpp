@@ -7,6 +7,7 @@
 #include <string>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <thread>
 #include <unistd.h>
 
 #include "RudeDrawer.h"
@@ -84,7 +85,6 @@ uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims, bool alwaysUpd
     RudeDrawerCommand command;
     command.kind = RDCMD_ADD_WIN;
     command.windowDims = dims;
-    command.windowAlwaysUpdating = alwaysUpdating;
     std::memset(command.windowTitle, 0, WINDOW_TITLE_MAX);
     std::memcpy(command.windowTitle, title.c_str(), title.size());
     send(&command, sizeof(RudeDrawerCommand));
@@ -98,7 +98,39 @@ uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims, bool alwaysUpd
         throw std::runtime_error("ERROR: response is not of kind `RDRESP_WINID`");
     }
 
-    return response.windowId;
+    auto id = response.windowId;
+
+    if (alwaysUpdating) {
+        std::thread thread([&callbacks = callbacks, id] {
+            while (true) {
+                auto it = callbacks.find(id);
+                if (it != callbacks.end()) {
+                    (it->second.callback)(it->second.parameters);
+                }
+            }
+        });
+        thread.detach();
+    }
+
+    return id;
+}
+
+void Draw::setPaintCallback(uint32_t id, DrawCallbackFunction callback, void* params) noexcept(true)
+{
+    callbacks[id] = (DrawCallback) {
+        .callback = callback,
+        .parameters = params,
+    };
+}
+
+#define CALLBACK_WAIT_TIME 100
+
+void Draw::removePaintCallback(uint32_t id) noexcept(true)
+{
+    callbacks.erase(id);
+    // Very optimal and totally not disgusting solution
+    // for waiting the 'alwaysUpdating thread' to exit
+    std::this_thread::sleep_for(std::chrono::milliseconds(CALLBACK_WAIT_TIME));
 }
 
 void Draw::removeWindow(uint32_t id) noexcept(false)
@@ -112,6 +144,11 @@ void Draw::removeWindow(uint32_t id) noexcept(false)
     recv(&response, sizeof(RudeDrawerResponse));
 
     NOTOK(response);
+
+    callbacks.erase(id);
+    // Very optimal and totally not disgusting solution
+    // for waiting the 'alwaysUpdating thread' to exit
+    std::this_thread::sleep_for(std::chrono::milliseconds(CALLBACK_WAIT_TIME));
 }
 
 void Draw::startPollingEventsWindow(uint32_t id) noexcept(false)
@@ -170,10 +207,19 @@ Display* Draw::getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false)
     return display;
 }
 
-RudeDrawerEvent Draw::pollEvent() noexcept(false)
+RudeDrawerEvent Draw::pollEvent(uint32_t id) noexcept(false)
 {
     RudeDrawerEvent event;
     recv(&event, sizeof(RudeDrawerEvent));
+    if (event.kind == RDEVENT_PAINT) {
+        auto it = callbacks.find(id);
+        if (it != callbacks.end()) {
+            (it->second.callback)(it->second.parameters);
+            RudeDrawerEvent retval;
+            retval.kind = RDEVENT_NONE;
+            return retval;
+        }
+    }
     return event;
 }
 
