@@ -102,11 +102,17 @@ uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims, bool alwaysUpd
 
     if (alwaysUpdating) {
         std::thread thread([&callbacks = callbacks, id] {
-            while (true) {
+            auto shouldQuit = false;
+            while (!shouldQuit) {
                 auto it = callbacks.find(id);
                 if (it != callbacks.end()) {
                     (it->second.callback)(it->second.parameters);
+                    shouldQuit = it->second.shouldQuit;
                 }
+            }
+            auto it = callbacks.find(id);
+            if (it != callbacks.end()) {
+                it->second.running = false;
             }
         });
         thread.detach();
@@ -127,10 +133,18 @@ void Draw::setPaintCallback(uint32_t id, DrawCallbackFunction callback, void* pa
 
 void Draw::removePaintCallback(uint32_t id) noexcept(true)
 {
-    callbacks.erase(id);
-    // Very optimal and totally not disgusting solution
-    // for waiting the 'alwaysUpdating thread' to exit
-    std::this_thread::sleep_for(std::chrono::milliseconds(CALLBACK_WAIT_TIME));
+    auto it = callbacks.find(id);
+    if (it != callbacks.end()) {
+        it->second.shouldQuit = true;
+    }
+
+    auto shouldQuit = false;
+    while (!shouldQuit) {
+        auto it = callbacks.find(id);
+        if (it != callbacks.end()) {
+            shouldQuit = !it->second.running;
+        }
+    }
 }
 
 void Draw::removeWindow(uint32_t id) noexcept(false)
@@ -145,10 +159,7 @@ void Draw::removeWindow(uint32_t id) noexcept(false)
 
     NOTOK(response);
 
-    callbacks.erase(id);
-    // Very optimal and totally not disgusting solution
-    // for waiting the 'alwaysUpdating thread' to exit
-    std::this_thread::sleep_for(std::chrono::milliseconds(CALLBACK_WAIT_TIME));
+    removePaintCallback(id);
 }
 
 void Draw::startPollingEventsWindow(uint32_t id) noexcept(false)

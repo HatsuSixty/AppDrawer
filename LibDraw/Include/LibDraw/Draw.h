@@ -11,6 +11,8 @@ typedef void (*DrawCallbackFunction)(void*);
 struct DrawCallback {
     DrawCallbackFunction callback;
     void* parameters;
+    bool running = true;
+    bool shouldQuit = false;
 };
 
 class Draw {
