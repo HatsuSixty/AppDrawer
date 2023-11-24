@@ -18,7 +18,7 @@ struct DrawCallback {
 class Draw {
 private:
     int socket;
-    std::unordered_map<uint32_t, DrawCallback> callbacks;
+    std::unordered_map<uint32_t, DrawCallback*> callbacks;
 
     void send(void* data, size_t n) noexcept(false);
     void recv(void* data, size_t n) noexcept(false);

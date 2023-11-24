@@ -102,18 +102,28 @@ uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims, bool alwaysUpd
 
     if (alwaysUpdating) {
         std::thread thread([&callbacks = callbacks, id] {
-            auto shouldQuit = false;
-            while (!shouldQuit) {
+            DrawCallback* callback = NULL;
+            {
                 auto it = callbacks.find(id);
                 if (it != callbacks.end()) {
-                    (it->second.callback)(it->second.parameters);
-                    shouldQuit = it->second.shouldQuit;
+                    callback = it->second;
                 }
             }
-            auto it = callbacks.find(id);
-            if (it != callbacks.end()) {
-                it->second.running = false;
+
+            auto shouldQuit = false;
+            while (!shouldQuit) {
+                if (callback == NULL) {
+                    auto it = callbacks.find(id);
+                    if (it != callbacks.end()) {
+                        callback = it->second;
+                    }
+                } else {
+                    (callback->callback)(callback->parameters);
+                    shouldQuit = callback->shouldQuit;
+                }
             }
+
+            callback->running = false;
         });
         thread.detach();
     }
@@ -123,28 +133,33 @@ uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims, bool alwaysUpd
 
 void Draw::setPaintCallback(uint32_t id, DrawCallbackFunction callback, void* params) noexcept(true)
 {
-    callbacks[id] = (DrawCallback) {
-        .callback = callback,
-        .parameters = params,
-    };
+    auto paintCallback = new DrawCallback;
+    paintCallback->callback = callback;
+    paintCallback->parameters = params;
+    callbacks[id] = paintCallback;
 }
-
-#define CALLBACK_WAIT_TIME 100
 
 void Draw::removePaintCallback(uint32_t id) noexcept(true)
 {
-    auto it = callbacks.find(id);
-    if (it != callbacks.end()) {
-        it->second.shouldQuit = true;
+    DrawCallback* callback;
+    {
+        auto it = callbacks.find(id);
+        if (it != callbacks.end()) {
+            callback = it->second;
+        } else {
+            return;
+        }
     }
+
+    callback->shouldQuit = true;
 
     auto shouldQuit = false;
     while (!shouldQuit) {
-        auto it = callbacks.find(id);
-        if (it != callbacks.end()) {
-            shouldQuit = !it->second.running;
-        }
+        shouldQuit = !callback->running;
     }
+
+    delete callback;
+    callbacks.erase(id);
 }
 
 void Draw::removeWindow(uint32_t id) noexcept(false)
@@ -225,7 +240,7 @@ RudeDrawerEvent Draw::pollEvent(uint32_t id) noexcept(false)
     if (event.kind == RDEVENT_PAINT) {
         auto it = callbacks.find(id);
         if (it != callbacks.end()) {
-            (it->second.callback)(it->second.parameters);
+            (it->second->callback)(it->second->parameters);
             RudeDrawerEvent retval;
             retval.kind = RDEVENT_NONE;
             return retval;
