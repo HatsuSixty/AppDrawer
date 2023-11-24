@@ -227,6 +227,8 @@ void AppDrawer::pollEvents(Window* window, Client& client) noexcept(true)
                 continue;
         }
     }
+
+    window->events.running = false;
     std::cout << "Exiting `pollEvents()` thread...\n";
 }
 
@@ -261,9 +263,8 @@ void AppDrawer::removeWindow(uint32_t id) noexcept(false)
     auto i = findWindow(id);
 
     windows[i]->events.isPolling = false;
-    // Yes I know this is the best solution a human being could ever
-    // come up with
-    for (size_t i = 0; i < 500; i++) asm("nop");
+    // Wait for `pollEvents` thread to exit
+    while (windows[i]->events.running) asm("nop");
 
     auto isClosedWindowActive = windows[i]->active;
 

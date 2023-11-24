@@ -10,6 +10,7 @@
 
 struct WindowEvents {
     bool isPolling;
+    bool running = true;
     std::vector<RudeDrawerEvent> events;
 };
 
