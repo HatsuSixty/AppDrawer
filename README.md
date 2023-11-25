@@ -1,6 +1,7 @@
 # AppDrawer
 
 A simple display server.
+![](./AppDrawerDemo.gif)
 
 ## Quick Start
 
