@@ -153,10 +153,8 @@ void Draw::removePaintCallback(uint32_t id) noexcept(true)
 
     callback->shouldQuit = true;
 
-    auto shouldQuit = false;
-    while (!shouldQuit) {
-        shouldQuit = !callback->running;
-    }
+    // Wait for the callback to exit
+    while (callback->running) asm("nop");
 
     delete callback;
     callbacks.erase(id);
