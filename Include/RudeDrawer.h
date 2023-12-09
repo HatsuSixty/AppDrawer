@@ -30,6 +30,7 @@ typedef enum {
     // Returns: `RDRESP_EMPTY`
     RDCMD_REMOVE_WIN,
     // Makes the server start sending events to the client.
+    // The event will be a struct of the type `RudeDrawerEvent` (defined and documented in this header).
     // Required arguments:
     //   - `windowId`
     // Returns: `RDRESP_EMPTY`
@@ -113,19 +114,26 @@ typedef struct {
     // Type: `uint32_t`
     uint32_t windowId;
     // The name of a shared memory that contains the pixels of a window.
-    // Type: char[WINDOW_SHM_NAME_MAX]
+    // Type: `char[WINDOW_SHM_NAME_MAX]`
     char windowShmName[WINDOW_SHM_NAME_MAX];
     // The dimensions of a window.
     // Type: `RudeDrawerVec2D` (defined and documented in this header)
     RudeDrawerVec2D dimensions;
 } RudeDrawerResponse;
 
+// These are all of the possible event kinds.
 typedef enum {
+    // No event.
     RDEVENT_NONE,
+    // The "close" button has been clicked.
     RDEVENT_CLOSE_WIN,
+    // The window has to update itself.
     RDEVENT_PAINT,
 } RudeDrawerEventKind;
 
+// This struct defines an event that can be sent to a client.
 typedef struct {
+    // The kind of event.
+    // Type: `RudeDrawerEventKind` (defined and documented in this header)
     RudeDrawerEventKind kind;
 } RudeDrawerEvent;
