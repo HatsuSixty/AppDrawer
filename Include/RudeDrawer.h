@@ -1,5 +1,8 @@
 #pragma once
 
+// This header contains definitions of structures and constants used by the AppDrawer server to communicate with its clients.
+// If you want to do anything with the server, start by sending a `RudeDrawerCommand` (defined and documented in this header) to it.
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -48,7 +51,7 @@ typedef enum {
     RDCMD_SEND_PAINT_EVENT,
 } RudeDrawerCommandKind;
 
-// A struct that contains two `uint32_t`s.
+// This is a struct that contains two `uint32_t`s.
 typedef struct {
     // x
     uint32_t x;
@@ -56,11 +59,20 @@ typedef struct {
     uint32_t y;
 } RudeDrawerVec2D;
 
+// This is a struct that, when sent over `SOCKET_PATH`, makes the server execute a command.
 #define WINDOW_TITLE_MAX 256
 typedef struct {
+    // The kind of command.
+    // Type: `RudeDrawerCommandKind` (defined and documented in this header)
     RudeDrawerCommandKind kind;
+    // The dimensions of a window.
+    // Type: `RudeDrawerVec2D` (defined and documented in this header)
     RudeDrawerVec2D windowDims;
+    // The title of a window.
+    // Type: `char[WINDOW_TITLE_MAX]`
     char* windowTitle[WINDOW_TITLE_MAX];
+    // The ID of a window.
+    // Type: `uint32_t`
     uint32_t windowId;
 } RudeDrawerCommand;
 
