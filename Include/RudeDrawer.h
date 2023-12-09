@@ -76,17 +76,27 @@ typedef struct {
     uint32_t windowId;
 } RudeDrawerCommand;
 
+// These are the possible kinds of response.
 typedef enum {
+    // Nothing.
     RDRESP_EMPTY,
+    // The ID of a window.
     RDRESP_WINID,
+    // The name of a shared memory.
     RDRESP_SHM_NAME,
+    // The dimensions of a window.
     RDRESP_DIMENSIONS,
 } RudeDrawerResponseKind;
 
+// These are all of the possible error codes.
 typedef enum {
+    // Indicates an invalid command.
     RDERROR_INVALID_COMMAND,
+    // Indicates an invalid window ID.
     RDERROR_INVALID_WINID,
+    // Indicates that `RDCMD_ADD_WIN` failed.
     RDERROR_ADD_WIN_FAILED,
+    // No error happened.
     RDERROR_OK,
 } RudeDrawerErrorKind;
 
