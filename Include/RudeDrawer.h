@@ -8,6 +8,7 @@
 #define COMPONENTS 4
 
 // These are all of the command types that can be sent to AppDrawer.
+// Commands can either return a `RudeDrawerResponse` struct (defined and documented in this header) or nothing.
 // The client should NOT wait for a response from commands that don't return anything.
 typedef enum {
     // Makes the server print "Pong!" in its logs.
@@ -47,8 +48,11 @@ typedef enum {
     RDCMD_SEND_PAINT_EVENT,
 } RudeDrawerCommandKind;
 
+// A struct that contains two `uint32_t`s.
 typedef struct {
+    // x
     uint32_t x;
+    // y
     uint32_t y;
 } RudeDrawerVec2D;
 
@@ -74,12 +78,23 @@ typedef enum {
     RDERROR_OK,
 } RudeDrawerErrorKind;
 
+// This is a struct that can be returned by some commands.
 #define WINDOW_SHM_NAME_MAX 256
 typedef struct {
+    // The kind of response.
+    // Type: `RudeDrawerResponseKind` (defined and documented in this header)
     RudeDrawerResponseKind kind;
+    // Contains the error code of the performed operation.
+    // Type: `RudeDrawerErrorKind` (defined and documented in this header)
     RudeDrawerErrorKind errorKind;
+    // The ID of a window.
+    // Type: `uint32_t`
     uint32_t windowId;
+    // The name of a shared memory that contains the pixels of a window.
+    // Type: char[WINDOW_SHM_NAME_MAX]
     char windowShmName[WINDOW_SHM_NAME_MAX];
+    // The dimensions of a window.
+    // Type: `RudeDrawerVec2D` (defined and documented in this header)
     RudeDrawerVec2D dimensions;
 } RudeDrawerResponse;
 
