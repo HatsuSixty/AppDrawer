@@ -1,6 +1,6 @@
 #pragma once
 
-// This header contains definitions of structures and constants used by the AppDrawer server to communicate with its clients.
+// RudeDrawer.h - Contains definitions of structures and constants used by the AppDrawer server to communicate with its clients.
 // If you want to do anything with the server, start by sending a `RudeDrawerCommand` (defined and documented in this header) to it.
 
 #include <stdint.h>

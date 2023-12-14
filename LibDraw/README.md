@@ -97,4 +97,6 @@ LibDraw uses standard C++ error handling. To know whether a function throws or n
 All LibDraw functions (except `Draw::sendPaintEvent`) are **NOT** thread safe. This means that these functions should only be called by one thread. This happens because all AppDrawer commands have a response, and another command should only be executed after another command has received its response.  
 **`SEND_PAINT_EVENT` does not receive a response after its execution, which means that it should be fine to call it at any time on another thread.**
 
-TODO: Write the rest of the documentation lmao
+## Documentation for LibDraw functions
+
+LibDraw functions are members of the `Draw` class, defined and documented in `LibDraw.h`.
