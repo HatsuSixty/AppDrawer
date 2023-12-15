@@ -1,3 +1,4 @@
+#include <ranges>
 #include <raylib.h>
 #include <sys/signal.h>
 
@@ -101,6 +102,17 @@ int main() noexcept(true)
             }
         }
         appdrawer->windowsMutex.unlock();
+
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !appdrawer->windows.empty()) {
+            for (auto& w : std::ranges::views::reverse(appdrawer->windows)) {
+                if (CheckCollisionPointRec(GetMousePosition(), w->area)) {
+                    if (w->id != appdrawer->windows.back()->id) {
+                        appdrawer->changeActiveWindow(w->id);
+                    }
+                    break;
+                }
+            }
+        }
 
         EndDrawing();
         UnloadTexture(texture);

@@ -284,8 +284,12 @@ void AppDrawer::setWindowPolling(uint32_t id, bool polling) noexcept(false)
 
 void AppDrawer::changeActiveWindow(uint32_t id) noexcept(false)
 {
-    (void) id;
-    assert(false && "Not implemented");
+    std::lock_guard<std::mutex> guard(windowsMutex);
+
+    auto windowIndex = findWindow(id);
+    auto window = windows[windowIndex];
+    windows.erase(windows.begin() + windowIndex);
+    windows.push_back(window);
 }
 
 void AppDrawer::startServer() noexcept(false)
