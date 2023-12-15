@@ -50,6 +50,33 @@ int main() noexcept(true)
             border.y -= borderThickness;
             DrawRectangleLinesEx(border, borderThickness, BLUE);
 
+            // Draw title bar
+            auto titleBarThickness = 20.0f;
+            Rectangle titleBarRect = {
+                .x = w->area.x - borderThickness,
+                .y = w->area.y - borderThickness - titleBarThickness,
+                .width = w->area.width + borderThickness * 2,
+                .height = titleBarThickness,
+            };
+            DrawRectangleRec(titleBarRect, YELLOW);
+
+            // Title bar logic
+            if (CheckCollisionPointRec(GetMousePosition(), titleBarRect)) {
+                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    w->isDragging = true;
+                }
+            }
+
+            if (w->isDragging) {
+                auto delta = GetMouseDelta();
+                w->area.x += delta.x;
+                w->area.y += delta.y;
+
+                if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+                    w->isDragging = false;
+                }
+            }
+
             // Draw close button
             auto closeButtonDims = 20.0f;
             Rectangle closeButtonRect = {
@@ -60,10 +87,10 @@ int main() noexcept(true)
             };
             DrawRectangleRec(closeButtonRect, RED);
 
+            // Close button logic
             if (CheckCollisionPointRec(GetMousePosition(), closeButtonRect)
                 && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)
-                && w->active)
-            {
+                && w->active) {
                 RudeDrawerEvent event;
                 event.kind = RDEVENT_CLOSE_WIN;
                 w->sendEvent(event);

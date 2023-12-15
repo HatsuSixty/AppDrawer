@@ -27,6 +27,7 @@ public:
     Rectangle area;
     WindowEvents events;
     bool active;
+    bool isDragging;
 
     Window(std::string title, uint32_t width, uint32_t height, uint32_t id) noexcept(false);
     void sendEvent(RudeDrawerEvent event) noexcept(true);
