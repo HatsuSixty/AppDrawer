@@ -1,5 +1,6 @@
 #include "AppDrawer.h"
 
+#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <sstream>
@@ -239,7 +240,6 @@ uint32_t AppDrawer::addWindow(std::string title, RudeDrawerVec2D dims) noexcept(
     auto id = windowId++;
     Window* window = new Window(title, dims.x, dims.y, id);
     windows.push_back(window);
-    changeActiveWindow(id);
     return id;
 }
 
@@ -266,8 +266,6 @@ void AppDrawer::removeWindow(uint32_t id) noexcept(false)
     // Wait for `pollEvents` thread to exit
     while (windows[i]->events.running) asm("nop");
 
-    auto isClosedWindowActive = windows[i]->active;
-
     try {
         windows[i]->destroy();
     } catch (std::runtime_error const& e) {
@@ -276,9 +274,6 @@ void AppDrawer::removeWindow(uint32_t id) noexcept(false)
     }
     delete windows[i];
     windows.erase(windows.begin() + i);
-
-    if (isClosedWindowActive && !windows.empty())
-        changeActiveWindow(windows[0]->id);
 }
 
 void AppDrawer::setWindowPolling(uint32_t id, bool polling) noexcept(false)
@@ -289,21 +284,8 @@ void AppDrawer::setWindowPolling(uint32_t id, bool polling) noexcept(false)
 
 void AppDrawer::changeActiveWindow(uint32_t id) noexcept(false)
 {
-    auto fail = true;
-    for (auto& w : windows) {
-        if (w->id == id) {
-            w->active = true;
-            fail = false;
-        } else {
-            w->active = false;
-        }
-    }
-    if (fail) {
-        std::ostringstream error;
-        error << "ERROR: could not find window of ID `"
-              << id << "`";
-        throw std::runtime_error(error.str());
-    }
+    (void) id;
+    assert(false && "Not implemented");
 }
 
 void AppDrawer::startServer() noexcept(false)
