@@ -7,6 +7,9 @@
 #include "RudeDrawer.h"
 #include "Util.h"
 
+#define BORDER_THICKNESS 5
+#define TITLEBAR_THICKNESS 20.0f
+
 int main() noexcept(true)
 {
     signal(SIGPIPE, SIG_IGN);
@@ -43,23 +46,21 @@ int main() noexcept(true)
             EndScissorMode();
 
             // Draw borders
-            auto borderThickness = 5;
             auto border = w->area;
-            border.width += borderThickness * 2;
-            border.height += borderThickness * 2;
-            border.x -= borderThickness;
-            border.y -= borderThickness;
-            DrawRectangleLinesEx(border, borderThickness, BLUE);
+            border.width += BORDER_THICKNESS * 2;
+            border.height += BORDER_THICKNESS * 2;
+            border.x -= BORDER_THICKNESS;
+            border.y -= BORDER_THICKNESS;
+            DrawRectangleLinesEx(border, BORDER_THICKNESS, BLUE);
 
             auto active = w->id == appdrawer->windows.back()->id;
 
             // Draw title bar
-            auto titleBarThickness = 20.0f;
             Rectangle titleBarRect = {
-                .x = w->area.x - borderThickness,
-                .y = w->area.y - borderThickness - titleBarThickness,
-                .width = w->area.width + borderThickness * 2,
-                .height = titleBarThickness,
+                .x = w->area.x - BORDER_THICKNESS,
+                .y = w->area.y - BORDER_THICKNESS - TITLEBAR_THICKNESS,
+                .width = w->area.width + BORDER_THICKNESS * 2,
+                .height = TITLEBAR_THICKNESS,
             };
             DrawRectangleRec(titleBarRect, YELLOW);
 
@@ -85,8 +86,8 @@ int main() noexcept(true)
             // Draw close button
             auto closeButtonDims = 20.0f;
             Rectangle closeButtonRect = {
-                .x = w->area.x - borderThickness,
-                .y = w->area.y - borderThickness - closeButtonDims,
+                .x = w->area.x - BORDER_THICKNESS,
+                .y = w->area.y - BORDER_THICKNESS - closeButtonDims,
                 .width = closeButtonDims,
                 .height = closeButtonDims,
             };
@@ -105,7 +106,12 @@ int main() noexcept(true)
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !appdrawer->windows.empty()) {
             for (auto& w : std::ranges::views::reverse(appdrawer->windows)) {
-                if (CheckCollisionPointRec(GetMousePosition(), w->area)) {
+                auto windowArea = w->area;
+                windowArea.y -= BORDER_THICKNESS + TITLEBAR_THICKNESS;
+                windowArea.x -= BORDER_THICKNESS;
+                windowArea.width += BORDER_THICKNESS*2;
+                windowArea.height += TITLEBAR_THICKNESS + BORDER_THICKNESS*2;
+                if (CheckCollisionPointRec(GetMousePosition(), windowArea)) {
                     if (w->id != appdrawer->windows.back()->id) {
                         appdrawer->changeActiveWindow(w->id);
                     }
