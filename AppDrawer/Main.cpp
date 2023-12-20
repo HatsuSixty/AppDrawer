@@ -118,7 +118,7 @@ int main() noexcept(true)
         appdrawer->windowsMutex.unlock();
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !appdrawer->windows.empty()) {
-            for (auto i = appdrawer->windows.size()-1; i-- > 0;) {
+            for (auto i = appdrawer->windows.size() - 1; i-- > 0;) {
                 auto& w = appdrawer->windows[i];
                 auto windowArea = w->area;
                 windowArea.y -= BORDER_THICKNESS + TITLEBAR_THICKNESS;
