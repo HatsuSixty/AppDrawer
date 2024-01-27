@@ -5,6 +5,7 @@
 #include "LibDraw/Draw.h"
 #include "LibDraw/Display.h"
 #include "LibDraw/Types.h"
+#include "RudeDrawer.h"
 
 // Disable all olive.c warnings
 #pragma clang diagnostic push
@@ -89,6 +90,9 @@ int main() noexcept(true)
         case RDEVENT_CLOSE_WIN:
             std::cout << "Received close window event\n";
             quit = true;
+            break;
+        case RDEVENT_KEYPRESS:
+            std::cout << "Key pressed! " << event.key << "\n";
             break;
         default:
             break;

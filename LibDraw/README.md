@@ -60,6 +60,9 @@ int main()
         case RDEVENT_CLOSE_WIN:
             quit = true;
             break;
+        case RDEVENT_KEYPRESS:
+            std::cout << "Key pressed! " << event.key << "\n";
+            break;
         default:
             break;
         }
@@ -99,4 +102,4 @@ All LibDraw functions (except `Draw::sendPaintEvent`) are **NOT** thread safe. T
 
 ## Documentation for LibDraw functions
 
-LibDraw functions are members of the `Draw` class, defined and documented in `LibDraw.h`.
+LibDraw functions are members of the `Draw` class, defined and documented in `LibDraw/Draw.h`.

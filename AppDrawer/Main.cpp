@@ -88,6 +88,118 @@ int main() noexcept(true)
 {
     signal(SIGPIPE, SIG_IGN);
 
+    RudeDrawerKey allKeys[] = {
+        RDKEY_NULL,
+        // Alphanumeric keys
+        RDKEY_APOSTROPHE,
+        RDKEY_COMMA,
+        RDKEY_MINUS,
+        RDKEY_PERIOD,
+        RDKEY_SLASH,
+        RDKEY_ZERO,
+        RDKEY_ONE,
+        RDKEY_TWO,
+        RDKEY_THREE,
+        RDKEY_FOUR,
+        RDKEY_FIVE,
+        RDKEY_SIX,
+        RDKEY_SEVEN,
+        RDKEY_EIGHT,
+        RDKEY_NINE,
+        RDKEY_SEMICOLON,
+        RDKEY_EQUAL,
+        RDKEY_A,
+        RDKEY_B,
+        RDKEY_C,
+        RDKEY_D,
+        RDKEY_E,
+        RDKEY_F,
+        RDKEY_G,
+        RDKEY_H,
+        RDKEY_I,
+        RDKEY_J,
+        RDKEY_K,
+        RDKEY_L,
+        RDKEY_M,
+        RDKEY_N,
+        RDKEY_O,
+        RDKEY_P,
+        RDKEY_Q,
+        RDKEY_R,
+        RDKEY_S,
+        RDKEY_T,
+        RDKEY_U,
+        RDKEY_V,
+        RDKEY_W,
+        RDKEY_X,
+        RDKEY_Y,
+        RDKEY_Z,
+        RDKEY_LEFT_BRACKET,
+        RDKEY_BACKSLASH,
+        RDKEY_RIGHT_BRACKET,
+        RDKEY_GRAVE,
+        // Function keys
+        RDKEY_SPACE,
+        RDKEY_ESCAPE,
+        RDKEY_ENTER,
+        RDKEY_TAB,
+        RDKEY_BACKSPACE,
+        RDKEY_INSERT,
+        RDKEY_DELETE,
+        RDKEY_RIGHT,
+        RDKEY_LEFT,
+        RDKEY_DOWN,
+        RDKEY_UP,
+        RDKEY_PAGE_UP,
+        RDKEY_PAGE_DOWN,
+        RDKEY_HOME,
+        RDKEY_END,
+        RDKEY_CAPS_LOCK,
+        RDKEY_SCROLL_LOCK,
+        RDKEY_NUM_LOCK,
+        RDKEY_PRINT_SCREEN,
+        RDKEY_PAUSE,
+        RDKEY_F1,
+        RDKEY_F2,
+        RDKEY_F3,
+        RDKEY_F4,
+        RDKEY_F5,
+        RDKEY_F6,
+        RDKEY_F7,
+        RDKEY_F8,
+        RDKEY_F9,
+        RDKEY_F10,
+        RDKEY_F11,
+        RDKEY_F12,
+        RDKEY_LEFT_SHIFT,
+        RDKEY_LEFT_CONTROL,
+        RDKEY_LEFT_ALT,
+        RDKEY_LEFT_SUPER,
+        RDKEY_RIGHT_SHIFT,
+        RDKEY_RIGHT_CONTROL,
+        RDKEY_RIGHT_ALT,
+        RDKEY_RIGHT_SUPER,
+        RDKEY_KB_MENU,
+        // Keypad keys
+        RDKEY_KP_0,
+        RDKEY_KP_1,
+        RDKEY_KP_2,
+        RDKEY_KP_3,
+        RDKEY_KP_4,
+        RDKEY_KP_5,
+        RDKEY_KP_6,
+        RDKEY_KP_7,
+        RDKEY_KP_8,
+        RDKEY_KP_9,
+        RDKEY_KP_DECIMAL,
+        RDKEY_KP_DIVIDE,
+        RDKEY_KP_MULTIPLY,
+        RDKEY_KP_SUBTRACT,
+        RDKEY_KP_ADD,
+        RDKEY_KP_ENTER,
+        RDKEY_KP_EQUAL
+    };
+
     auto appdrawer = new AppDrawer();
     TRY(appdrawer->startServer());
 
@@ -114,6 +226,21 @@ int main() noexcept(true)
             EndScissorMode();
 
             windowDecoration(appdrawer, w);
+        }
+
+        for (size_t i = 0; i < sizeof(allKeys) / sizeof(allKeys[0]) && !appdrawer->windows.empty(); ++i) {
+            RudeDrawerEventKind eventKind;
+            if (IsKeyPressed(allKeys[i]))
+                eventKind = RDEVENT_KEYPRESS;
+            else if (IsKeyReleased(allKeys[i]))
+                eventKind = RDEVENT_KEYRELEASE;
+            else
+                continue;
+
+            RudeDrawerEvent event;
+            event.kind = eventKind;
+            event.key = allKeys[i];
+            appdrawer->windows.back()->sendEvent(event);
         }
         appdrawer->windowsMutex.unlock();
 

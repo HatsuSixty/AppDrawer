@@ -52,6 +52,9 @@ int main()
         case RDEVENT_CLOSE_WIN:
             quit = true;
             break;
+        case RDEVENT_KEYPRESS:
+            std::cout << "Key pressed! " << event.key << "\n";
+            break;
         default:
             break;
         }
