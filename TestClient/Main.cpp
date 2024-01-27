@@ -94,6 +94,9 @@ int main() noexcept(true)
         case RDEVENT_KEYPRESS:
             std::cout << "Key pressed! " << event.key << "\n";
             break;
+        case RDEVENT_MOUSEPRESS:
+            std::cout << "Mouse button pressed! " << event.mouseButton << "\n";
+            break;
         default:
             break;
         }

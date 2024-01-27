@@ -242,6 +242,29 @@ int main() noexcept(true)
             event.key = allKeys[i];
             appdrawer->windows.back()->sendEvent(event);
         }
+
+        if (!appdrawer->windows.empty()) {
+            RudeDrawerEvent mouseEvent;
+            mouseEvent.kind = (RudeDrawerEventKind)0;
+            auto mouseWheelMove = GetMouseWheelMove();
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+                mouseEvent.kind = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) ? RDEVENT_MOUSEPRESS : RDEVENT_MOUSERELEASE;
+                mouseEvent.mouseButton = RDMOUSE_LEFT;
+            } else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || IsMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
+                mouseEvent.kind = IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) ? RDEVENT_MOUSEPRESS : RDEVENT_MOUSERELEASE;
+                mouseEvent.mouseButton = RDMOUSE_RIGHT;
+            } else if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE) || IsMouseButtonReleased(MOUSE_BUTTON_MIDDLE)) {
+                mouseEvent.kind = IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE) ? RDEVENT_MOUSEPRESS : RDEVENT_MOUSERELEASE;
+                mouseEvent.mouseButton = RDMOUSE_MIDDLE;
+            } else if (mouseWheelMove > 0 || mouseWheelMove < 0) {
+                mouseEvent.kind = RDEVENT_MOUSEPRESS;
+                mouseEvent.mouseButton = (mouseWheelMove > 0) ? RDMOUSE_UP : RDMOUSE_DOWN;
+            }
+
+            if (mouseEvent.kind != 0) {
+                appdrawer->windows.back()->sendEvent(mouseEvent);
+            }
+        }
         appdrawer->windowsMutex.unlock();
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !appdrawer->windows.empty()) {

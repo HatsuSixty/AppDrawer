@@ -234,6 +234,15 @@ typedef enum {
     RDKEY_KP_EQUAL        = 336,
 } RudeDrawerKey;
 
+// These are all the mouse buttons.
+typedef enum {
+    RDMOUSE_UP,
+    RDMOUSE_DOWN,
+    RDMOUSE_LEFT,
+    RDMOUSE_RIGHT,
+    RDMOUSE_MIDDLE,
+} RudeDrawerMouseButton;
+
 // These are all of the possible event kinds.
 typedef enum {
     // No event.
@@ -246,6 +255,10 @@ typedef enum {
     RDEVENT_KEYPRESS,
     // A key has been released.
     RDEVENT_KEYRELEASE,
+    // A mouse button has been pressed.
+    RDEVENT_MOUSEPRESS,
+    // A mouse button has been released.
+    RDEVENT_MOUSERELEASE,
 } RudeDrawerEventKind;
 
 // This struct defines an event that can be sent to a client.
@@ -256,4 +269,7 @@ typedef struct {
     // A keyboard key.
     // Type: `RudeDrawerKey` (defined and documented in this header)
     RudeDrawerKey key;
+    // A mouse button.
+    // Type: `RudeDrawerMouseButton` (defined and documented in this header)
+    RudeDrawerMouseButton mouseButton;
 } RudeDrawerEvent;
