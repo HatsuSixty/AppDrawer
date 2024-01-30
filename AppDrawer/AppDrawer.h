@@ -15,7 +15,7 @@ enum ClientResult {
 
 class Client {
 private:
-    int sockfd;
+    int m_sockfd;
 public:
     Client(int sockfd) noexcept(true);
     ClientResult receiveOrFail(void* data, size_t n) noexcept(true);
@@ -25,15 +25,15 @@ public:
 
 class AppDrawer {
 private:
-    uint32_t windowId = 1;
-    int fd;
+    uint32_t m_windowId = 1;
+    int m_fd;
 
     void listener() noexcept(true);
     void handleClient(int clientFd) noexcept(true);
     void pollEvents(Window* window, Client& client) noexcept(true);
 public:
-    std::mutex windowsMutex;
-    std::vector<Window*> windows;
+    std::mutex m_windowsMutex;
+    std::vector<Window*> m_windows;
 
     size_t findWindow(uint32_t id) noexcept(false);
     uint32_t addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false);

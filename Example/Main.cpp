@@ -27,7 +27,7 @@ int main()
 
     CallbackParameters parameters = {
         .dims = dims,
-        .pixels = display->pixels,
+        .pixels = display->m_pixels,
     };
 
     draw.setPaintCallback(id, [](void* p) {

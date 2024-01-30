@@ -14,7 +14,7 @@
 
 void Draw::send(void* data, size_t n) noexcept(false)
 {
-    if (::send(socket, data, n, 0) < 0) {
+    if (::send(m_socket, data, n, 0) < 0) {
         std::ostringstream error;
         error << "ERROR: could not send data to server: "
               << strerror(errno);
@@ -24,12 +24,12 @@ void Draw::send(void* data, size_t n) noexcept(false)
 
 void Draw::recv(void* data, size_t n) noexcept(false)
 {
-    auto numOfBytesRecvd = ::recv(socket, data, n, 0);
+    auto numOfBytesRecvd = ::recv(m_socket, data, n, 0);
     if (numOfBytesRecvd < 0) {
         std::ostringstream error;
         error << "ERROR: could not receive data from server: "
               << strerror(errno);
-        close(socket);
+        close(m_socket);
         throw std::runtime_error(error.str());
     }
 }
@@ -46,8 +46,8 @@ void Draw::connect() noexcept(false)
 {
     std::cout << "[INFO] Connecting to AppDrawer server...\n";
 
-    socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
-    if (socket < 0) {
+    m_socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    if (m_socket < 0) {
         std::ostringstream error;
         error << "ERROR: could open socket: "
               << strerror(errno);
@@ -59,11 +59,11 @@ void Draw::connect() noexcept(false)
     addr.sun_family = AF_UNIX;
     std::strncpy(addr.sun_path, SOCKET_PATH, sizeof(addr.sun_path) - 1);
 
-    if (::connect(socket, (struct sockaddr*)&addr, sizeof(struct sockaddr_un)) < 0) {
+    if (::connect(m_socket, (struct sockaddr*)&addr, sizeof(struct sockaddr_un)) < 0) {
         std::ostringstream error;
         error << "ERROR: could not connect to socket: "
               << strerror(errno);
-        close(socket);
+        close(m_socket);
         throw std::runtime_error(error.str());
     }
 }
@@ -101,7 +101,7 @@ uint32_t Draw::addWindow(std::string title, RudeDrawerVec2D dims, bool alwaysUpd
     auto id = response.windowId;
 
     if (alwaysUpdating) {
-        std::thread thread([&callbacks = callbacks, id] {
+        std::thread thread([&callbacks = m_callbacks, id] {
             DrawCallback* callback = NULL;
             {
                 auto it = callbacks.find(id);
@@ -136,15 +136,15 @@ void Draw::setPaintCallback(uint32_t id, DrawCallbackFunction callback, void* pa
     auto paintCallback = new DrawCallback;
     paintCallback->callback = callback;
     paintCallback->parameters = params;
-    callbacks[id] = paintCallback;
+    m_callbacks[id] = paintCallback;
 }
 
 void Draw::removePaintCallback(uint32_t id) noexcept(true)
 {
     DrawCallback* callback;
     {
-        auto it = callbacks.find(id);
-        if (it != callbacks.end()) {
+        auto it = m_callbacks.find(id);
+        if (it != m_callbacks.end()) {
             callback = it->second;
         } else {
             return;
@@ -157,7 +157,7 @@ void Draw::removePaintCallback(uint32_t id) noexcept(true)
     while (callback->running) asm("nop");
 
     delete callback;
-    callbacks.erase(id);
+    m_callbacks.erase(id);
 }
 
 void Draw::removeWindow(uint32_t id) noexcept(false)
@@ -236,8 +236,8 @@ RudeDrawerEvent Draw::pollEvent(uint32_t id) noexcept(false)
     RudeDrawerEvent event;
     recv(&event, sizeof(RudeDrawerEvent));
     if (event.kind == RDEVENT_PAINT) {
-        auto it = callbacks.find(id);
-        if (it != callbacks.end()) {
+        auto it = m_callbacks.find(id);
+        if (it != m_callbacks.end()) {
             (it->second->callback)(it->second->parameters);
             RudeDrawerEvent retval;
             retval.kind = RDEVENT_NONE;
@@ -250,5 +250,5 @@ RudeDrawerEvent Draw::pollEvent(uint32_t id) noexcept(false)
 Draw::~Draw() noexcept(true)
 {
     std::cout << "[INFO] Closing connection\n";
-    close(socket);
+    close(m_socket);
 }

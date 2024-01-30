@@ -44,7 +44,7 @@ int main() noexcept(true)
 
     Display* display = nullptr;
     TRY(display = draw.getDisplay(id, dims));
-    Olivec_Canvas canvas = olivec_canvas((uint32_t*)display->pixels, dims.x, dims.y, dims.x);
+    Olivec_Canvas canvas = olivec_canvas((uint32_t*)display->m_pixels, dims.x, dims.y, dims.x);
 
 #define RECT_WIDTH 100
 #define RECT_HEIGHT 100

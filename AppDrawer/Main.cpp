@@ -12,7 +12,7 @@
 
 void closeButton(AppDrawer* appdrawer, Window* window, Rectangle titleBarRect) noexcept(true)
 {
-    auto active = window->id == appdrawer->windows.back()->id;
+    auto active = window->m_id == appdrawer->m_windows.back()->m_id;
 
     Rectangle closeButtonRect = {
         .x = titleBarRect.x,
@@ -34,43 +34,43 @@ void closeButton(AppDrawer* appdrawer, Window* window, Rectangle titleBarRect) n
 
 void titleBar(AppDrawer* appdrawer, Window* window) noexcept(true)
 {
-    auto active = window->id == appdrawer->windows.back()->id;
+    auto active = window->m_id == appdrawer->m_windows.back()->m_id;
 
     Rectangle titleBarRect = {
-        .x = window->area.x - BORDER_THICKNESS,
-        .y = window->area.y - BORDER_THICKNESS - TITLEBAR_THICKNESS,
-        .width = window->area.width + BORDER_THICKNESS * 2,
+        .x = window->m_area.x - BORDER_THICKNESS,
+        .y = window->m_area.y - BORDER_THICKNESS - TITLEBAR_THICKNESS,
+        .width = window->m_area.width + BORDER_THICKNESS * 2,
         .height = TITLEBAR_THICKNESS,
     };
     DrawRectangleRec(titleBarRect, YELLOW);
 
     closeButton(appdrawer, window, titleBarRect);
 
-    DrawText(window->title.c_str(), window->area.x + TITLEBAR_THICKNESS + 1, titleBarRect.y,
+    DrawText(window->m_title.c_str(), window->m_area.x + TITLEBAR_THICKNESS + 1, titleBarRect.y,
         titleBarRect.height, BLUE);
 
     if (CheckCollisionPointRec(GetMousePosition(), titleBarRect)) {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            window->isDragging = true;
+            window->m_isDragging = true;
         }
     }
 
-    if (window->isDragging) {
+    if (window->m_isDragging) {
         if (active) {
             auto delta = GetMouseDelta();
-            window->area.x += delta.x;
-            window->area.y += delta.y;
+            window->m_area.x += delta.x;
+            window->m_area.y += delta.y;
         }
 
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-            window->isDragging = false;
+            window->m_isDragging = false;
         }
     }
 }
 
 void windowBorders(Window* window) noexcept(true)
 {
-    auto border = window->area;
+    auto border = window->m_area;
     border.width += BORDER_THICKNESS * 2;
     border.height += BORDER_THICKNESS * 2;
     border.x -= BORDER_THICKNESS;
@@ -211,24 +211,24 @@ int main() noexcept(true)
         ClearBackground(LIGHTGRAY);
 
         Texture2D texture;
-        appdrawer->windowsMutex.lock();
-        for (auto w : appdrawer->windows) {
-            BeginScissorMode(w->area.x, w->area.y, w->area.width, w->area.height);
+        appdrawer->m_windowsMutex.lock();
+        for (auto w : appdrawer->m_windows) {
+            BeginScissorMode(w->m_area.x, w->m_area.y, w->m_area.width, w->m_area.height);
             Image image = {
-                .data = w->pixels,
-                .width = (int)w->area.width,
-                .height = (int)w->area.height,
+                .data = w->m_pixels,
+                .width = (int)w->m_area.width,
+                .height = (int)w->m_area.height,
                 .mipmaps = 1,
                 .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
             };
             texture = LoadTextureFromImage(image);
-            DrawTexture(texture, w->area.x, w->area.y, WHITE);
+            DrawTexture(texture, w->m_area.x, w->m_area.y, WHITE);
             EndScissorMode();
 
             windowDecoration(appdrawer, w);
         }
 
-        for (size_t i = 0; i < sizeof(allKeys) / sizeof(allKeys[0]) && !appdrawer->windows.empty(); ++i) {
+        for (size_t i = 0; i < sizeof(allKeys) / sizeof(allKeys[0]) && !appdrawer->m_windows.empty(); ++i) {
             RudeDrawerEventKind eventKind;
             if (IsKeyPressed(allKeys[i]))
                 eventKind = RDEVENT_KEYPRESS;
@@ -240,10 +240,10 @@ int main() noexcept(true)
             RudeDrawerEvent event;
             event.kind = eventKind;
             event.key = allKeys[i];
-            appdrawer->windows.back()->sendEvent(event);
+            appdrawer->m_windows.back()->sendEvent(event);
         }
 
-        if (!appdrawer->windows.empty()) {
+        if (!appdrawer->m_windows.empty()) {
             RudeDrawerEvent mouseEvent;
             mouseEvent.kind = (RudeDrawerEventKind)0;
             auto mouseWheelMove = GetMouseWheelMove();
@@ -262,22 +262,22 @@ int main() noexcept(true)
             }
 
             if (mouseEvent.kind != 0) {
-                appdrawer->windows.back()->sendEvent(mouseEvent);
+                appdrawer->m_windows.back()->sendEvent(mouseEvent);
             }
         }
-        appdrawer->windowsMutex.unlock();
+        appdrawer->m_windowsMutex.unlock();
 
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !appdrawer->windows.empty()) {
-            for (auto i = appdrawer->windows.size() - 1; i-- > 0;) {
-                auto& w = appdrawer->windows[i];
-                auto windowArea = w->area;
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !appdrawer->m_windows.empty()) {
+            for (auto i = appdrawer->m_windows.size() - 1; i-- > 0;) {
+                auto& w = appdrawer->m_windows[i];
+                auto windowArea = w->m_area;
                 windowArea.y -= BORDER_THICKNESS + TITLEBAR_THICKNESS;
                 windowArea.x -= BORDER_THICKNESS;
                 windowArea.width += BORDER_THICKNESS * 2;
                 windowArea.height += TITLEBAR_THICKNESS + BORDER_THICKNESS * 2;
                 if (CheckCollisionPointRec(GetMousePosition(), windowArea)) {
-                    if (w->id != appdrawer->windows.back()->id) {
-                        appdrawer->changeActiveWindow(w->id);
+                    if (w->m_id != appdrawer->m_windows.back()->m_id) {
+                        appdrawer->changeActiveWindow(w->m_id);
                     }
                     break;
                 }

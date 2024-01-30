@@ -20,8 +20,8 @@ struct DrawCallback {
 // This class is used for communication with the AppDrawer server.
 class Draw {
 private:
-    int socket;
-    std::unordered_map<uint32_t, DrawCallback*> callbacks;
+    int m_socket;
+    std::unordered_map<uint32_t, DrawCallback*> m_callbacks;
 
     void send(void* data, size_t n) noexcept(false);
     void recv(void* data, size_t n) noexcept(false);

@@ -16,17 +16,17 @@ struct WindowEvents {
 
 class Window {
 public:
-    std::string title;
+    std::string m_title;
 
-    uint8_t* pixels;
-    std::string pixelsShmName;
-    int pixelsShmFd;
-    size_t pixelsShmSize;
+    uint8_t* m_pixels;
+    std::string m_pixelsShmName;
+    int m_pixelsShmFd;
+    size_t m_pixelsShmSize;
 
-    uint32_t id;
-    Rectangle area;
-    WindowEvents events;
-    bool isDragging;
+    uint32_t m_id;
+    Rectangle m_area;
+    WindowEvents m_events;
+    bool m_isDragging;
 
     Window(std::string title, uint32_t width, uint32_t height, uint32_t id) noexcept(false);
     void sendEvent(RudeDrawerEvent event) noexcept(true);
