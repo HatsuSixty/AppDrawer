@@ -211,7 +211,10 @@ int main() noexcept(true)
         ClearBackground(LIGHTGRAY);
 
         Texture2D texture;
+        // Lock mutex before modifying `appdrawer->m_windows`' contents
         appdrawer->m_windowsMutex.lock();
+
+        // Draw windows
         for (auto w : appdrawer->m_windows) {
             BeginScissorMode(w->m_area.x, w->m_area.y, w->m_area.width, w->m_area.height);
             Image image = {
@@ -228,6 +231,7 @@ int main() noexcept(true)
             windowDecoration(appdrawer, w);
         }
 
+        // Handle key events
         for (size_t i = 0; i < sizeof(allKeys) / sizeof(allKeys[0]) && !appdrawer->m_windows.empty(); ++i) {
             RudeDrawerEventKind eventKind;
             if (IsKeyPressed(allKeys[i]))
@@ -243,6 +247,7 @@ int main() noexcept(true)
             appdrawer->m_windows.back()->sendEvent(event);
         }
 
+        // Handle mouse events
         if (!appdrawer->m_windows.empty()) {
             RudeDrawerEvent mouseEvent;
             mouseEvent.kind = (RudeDrawerEventKind)0;
@@ -265,16 +270,20 @@ int main() noexcept(true)
                 appdrawer->m_windows.back()->sendEvent(mouseEvent);
             }
         }
+        // Unlock mutex after modifying `appdrawer->m_windows`' contents
         appdrawer->m_windowsMutex.unlock();
 
+        // Handle window focus
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !appdrawer->m_windows.empty()) {
             for (auto i = appdrawer->m_windows.size() - 1; i-- > 0;) {
                 auto& w = appdrawer->m_windows[i];
+
                 auto windowArea = w->m_area;
                 windowArea.y -= BORDER_THICKNESS + TITLEBAR_THICKNESS;
                 windowArea.x -= BORDER_THICKNESS;
                 windowArea.width += BORDER_THICKNESS * 2;
                 windowArea.height += TITLEBAR_THICKNESS + BORDER_THICKNESS * 2;
+
                 if (CheckCollisionPointRec(GetMousePosition(), windowArea)) {
                     if (w->m_id != appdrawer->m_windows.back()->m_id) {
                         appdrawer->changeActiveWindow(w->m_id);
