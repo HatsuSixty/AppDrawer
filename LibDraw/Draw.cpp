@@ -209,6 +209,25 @@ void Draw::sendPaintEvent(uint32_t id) noexcept(false)
     send(&command, sizeof(RudeDrawerCommand));
 }
 
+RudeDrawerVec2D Draw::getMousePosition(uint32_t id) noexcept(false)
+{
+    RudeDrawerCommand command;
+    command.kind = RDCMD_GET_MOUSE_POSITION;
+    command.windowId = id;
+    send(&command, sizeof(RudeDrawerCommand));
+
+    RudeDrawerResponse response;
+    recv(&response, sizeof(RudeDrawerResponse));
+
+    NOTOK(response);
+
+    if (response.kind != RDRESP_MOUSE_POSITION) {
+        throw std::runtime_error("ERROR: response is not of kind `RDRESP_MOUSE_POSITION`");
+    }
+
+    return response.mousePos;
+}
+
 Display* Draw::getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false)
 {
     RudeDrawerCommand command;

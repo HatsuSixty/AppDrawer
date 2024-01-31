@@ -45,6 +45,8 @@ public:
     void stopPollingEventsWindow(uint32_t id) noexcept(false);
     // Makes the server send a paint event to the specified window.
     void sendPaintEvent(uint32_t id) noexcept(false);
+    // Returns the mouse position within a window.
+    RudeDrawerVec2D getMousePosition(uint32_t id) noexcept(false);
     // Returns a `Display` instance (defined and documented in `Display.h`).
     Display* getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false);
     // Returns a `RudeDrawerEvent` struct (defined and documented in `RudeDrawer.h`).

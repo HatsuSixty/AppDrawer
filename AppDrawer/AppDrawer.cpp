@@ -207,6 +207,35 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
             event.kind = RDEVENT_PAINT;
             m_windows[i]->sendEvent(event);
         } break;
+        case RDCMD_GET_MOUSE_POSITION: {
+            std::cout << "  => Getting mouse position within window\n";
+            std::cout << "    -> ID: " << command.windowId << "\n";
+
+            uint32_t i;
+            try {
+                i = findWindow(command.windowId);
+            } catch (std::runtime_error const& e) {
+                std::cerr << e.what() << "\n";
+                if (client.sendErrOrFail(RDERROR_INVALID_WINID) != CLIENT_OK) continue;
+                continue;
+            }
+
+            RudeDrawerResponse response;
+            response.kind = RDRESP_MOUSE_POSITION;
+            response.errorKind = RDERROR_OK;
+
+            auto mousePosX = m_mousePos.x - m_windows[i]->m_area.x;
+            if (mousePosX < 0) mousePosX = 0;
+            auto mousePosY = m_mousePos.y - m_windows[i]->m_area.y;
+            if (mousePosY < 0) mousePosY = 0;
+
+            response.mousePos = RudeDrawerVec2D {
+                .x = (uint32_t)mousePosX,
+                .y = (uint32_t)mousePosY,
+            };
+            if (client.sendOrFail(&response, sizeof(RudeDrawerResponse)) != CLIENT_OK)
+                continue;
+        } break;
         default:
             std::cerr << "  => ERROR: unknown command `" << command.kind << "`\n";
             if (client.sendErrOrFail(RDERROR_INVALID_COMMAND) != CLIENT_OK) continue;
@@ -241,6 +270,12 @@ uint32_t AppDrawer::addWindow(std::string title, RudeDrawerVec2D dims) noexcept(
     Window* window = new Window(title, dims.x, dims.y, id);
     m_windows.push_back(window);
     return id;
+}
+
+void AppDrawer::setMousePosition(Vector2 mousePos)
+{
+    m_previousMousePos = m_mousePos;
+    m_mousePos = mousePos;
 }
 
 size_t AppDrawer::findWindow(uint32_t id) noexcept(false)

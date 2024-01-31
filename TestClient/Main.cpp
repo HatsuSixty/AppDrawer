@@ -95,7 +95,16 @@ int main() noexcept(true)
             std::cout << "Key pressed! " << event.key << "\n";
             break;
         case RDEVENT_MOUSEPRESS:
-            std::cout << "Mouse button pressed! " << event.mouseButton << "\n";
+            if (event.mouseButton == RDMOUSE_LEFT) {
+                auto pos = draw.getMousePosition(id);
+                auto withinRectangleX = pos.x >= rectX && pos.x < (rectX + RECT_WIDTH);
+                auto withinRectangleY = pos.y >= rectY && pos.y < (rectY + RECT_HEIGHT);
+                if (withinRectangleX && withinRectangleY) {
+                    std::cout << "Rectangle clicked!\n";
+                }
+            } else {
+                std::cout << "Mouse button pressed! " << event.mouseButton << "\n";
+            }
             break;
         default:
             break;

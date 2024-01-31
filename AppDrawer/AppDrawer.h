@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <raylib.h>
 #include <vector>
 #include <mutex>
 
@@ -16,6 +17,7 @@ enum ClientResult {
 class Client {
 private:
     int m_sockfd;
+
 public:
     Client(int sockfd) noexcept(true);
     ClientResult receiveOrFail(void* data, size_t n) noexcept(true);
@@ -27,14 +29,18 @@ class AppDrawer {
 private:
     uint32_t m_windowId = 1;
     int m_fd;
+    Vector2 m_mousePos;
+    Vector2 m_previousMousePos;
 
     void listener() noexcept(true);
     void handleClient(int clientFd) noexcept(true);
     void pollEvents(Window* window, Client& client) noexcept(true);
+
 public:
     std::mutex m_windowsMutex;
     std::vector<Window*> m_windows;
 
+    void setMousePosition(Vector2 mousePos);
     size_t findWindow(uint32_t id) noexcept(false);
     uint32_t addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false);
     void removeWindow(uint32_t id) noexcept(false);

@@ -293,6 +293,8 @@ int main() noexcept(true)
             }
         }
 
+        appdrawer->setMousePosition(GetMousePosition());
+
         EndDrawing();
         UnloadTexture(texture);
     }

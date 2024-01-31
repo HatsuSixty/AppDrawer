@@ -50,6 +50,11 @@ typedef enum {
     //   - `windowId`
     // Returns: None
     RDCMD_SEND_PAINT_EVENT,
+    // Returns the mouse position within the specified window (specified by `windowId`).
+    // Required arguments:
+    //   - `windowId`
+    // Returns: `RDRESP_MOUSE_POSITION`
+    RDCMD_GET_MOUSE_POSITION,
 } RudeDrawerCommandKind;
 
 // This is a struct that contains two `uint32_t`s.
@@ -87,6 +92,8 @@ typedef enum {
     RDRESP_SHM_NAME,
     // The dimensions of a window.
     RDRESP_DIMENSIONS,
+    // The mouse position within a window.
+    RDRESP_MOUSE_POSITION,
 } RudeDrawerResponseKind;
 
 // These are all of the possible error codes.
@@ -119,6 +126,9 @@ typedef struct {
     // The dimensions of a window.
     // Type: `RudeDrawerVec2D` (defined and documented in this header)
     RudeDrawerVec2D dimensions;
+    // The position of the cursor within a window.
+    // Type: `RudeDrawerVec2D` (defined and documented in this header)
+    RudeDrawerVec2D mousePos;
 } RudeDrawerResponse;
 
 // These are all the keyboard keys.
