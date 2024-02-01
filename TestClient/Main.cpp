@@ -92,11 +92,18 @@ int main() noexcept(true)
             quit = true;
             break;
         case RDEVENT_KEYPRESS:
-            std::cout << "Key pressed! " << event.key << "\n";
+            if (event.key == RDKEY_SPACE) {
+                RudeDrawerVec2D delta;
+                TRY(delta = draw.getMouseDelta())
+                std::cout << "Mouse delta: {" << delta.x << ", " << delta.y << "}\n";
+            } else {
+                std::cout << "Key pressed! " << event.key << "\n";
+            }
             break;
         case RDEVENT_MOUSEPRESS:
             if (event.mouseButton == RDMOUSE_LEFT) {
-                auto pos = draw.getMousePosition(id);
+                RudeDrawerVec2D pos;
+                TRY(pos = draw.getMousePosition(id));
                 auto withinRectangleX = pos.x >= rectX && pos.x < (rectX + RECT_WIDTH);
                 auto withinRectangleY = pos.y >= rectY && pos.y < (rectY + RECT_HEIGHT);
                 if (withinRectangleX && withinRectangleY) {

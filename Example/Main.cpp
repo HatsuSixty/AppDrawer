@@ -36,8 +36,8 @@ int main()
         // if the last parameter of `Draw::addWindow()` is `true`, this
         // function is called at every frame, else, it is called everytime
         // the client calls `Draw::sendPaintEvent()`
-        for (size_t x = 0; x < params->dims.x; ++x) {
-            for (size_t y = 0; y < params->dims.y; ++y) {
+        for (int x = 0; x < params->dims.x; ++x) {
+            for (int y = 0; y < params->dims.y; ++y) {
                 // 0xFFFF0000 = blue
                 ((uint32_t*)params->pixels)[x*params->dims.x+y] = 0xFFFF0000;
             }

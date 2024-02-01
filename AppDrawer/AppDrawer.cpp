@@ -230,8 +230,22 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
             if (mousePosY < 0) mousePosY = 0;
 
             response.mousePos = RudeDrawerVec2D {
-                .x = (uint32_t)mousePosX,
-                .y = (uint32_t)mousePosY,
+                .x = (int)mousePosX,
+                .y = (int)mousePosY,
+            };
+            if (client.sendOrFail(&response, sizeof(RudeDrawerResponse)) != CLIENT_OK)
+                continue;
+        } break;
+        case RDCMD_GET_MOUSE_DELTA: {
+            std::cout << "  => Getting mouse delta\n";
+
+            RudeDrawerResponse response;
+            response.kind = RDRESP_MOUSE_DELTA;
+            response.errorKind = RDERROR_OK;
+
+            response.mouseDelta = RudeDrawerVec2D {
+                .x = (int)(m_mousePos.x - m_previousMousePos.x),
+                .y = (int)(m_mousePos.y - m_previousMousePos.y),
             };
             if (client.sendOrFail(&response, sizeof(RudeDrawerResponse)) != CLIENT_OK)
                 continue;

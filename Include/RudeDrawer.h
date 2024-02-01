@@ -40,7 +40,8 @@ typedef enum {
     //   - `windowId`
     // Returns: `RDRESP_EMPTY`
     RDCMD_STOP_POLLING_EVENTS_WIN,
-    // Returns the name of a shared memory that contains the pixels of the specified window (specified by `windowId`).
+    // Returns the name of a shared memory that contains the pixels of the specified window
+    // (specified by `windowId`).
     // Required arguments:
     //   - `windowId`
     // Returns: `RDRESP_SHM_NAME`
@@ -55,14 +56,18 @@ typedef enum {
     //   - `windowId`
     // Returns: `RDRESP_MOUSE_POSITION`
     RDCMD_GET_MOUSE_POSITION,
+    // Returns the mouse position delta between frames.
+    // Required arguments: None
+    // Returns: `RDRESP_MOUSE_DELTA`
+    RDCMD_GET_MOUSE_DELTA,
 } RudeDrawerCommandKind;
 
 // This is a struct that contains two `uint32_t`s.
 typedef struct {
     // x
-    uint32_t x;
+    int x;
     // y
-    uint32_t y;
+    int y;
 } RudeDrawerVec2D;
 
 // This is a struct that, when sent over `SOCKET_PATH`, makes the server execute a command.
@@ -94,6 +99,8 @@ typedef enum {
     RDRESP_DIMENSIONS,
     // The mouse position within a window.
     RDRESP_MOUSE_POSITION,
+    // The mouse position delta between frames.
+    RDRESP_MOUSE_DELTA,
 } RudeDrawerResponseKind;
 
 // These are all of the possible error codes.
@@ -129,6 +136,9 @@ typedef struct {
     // The position of the cursor within a window.
     // Type: `RudeDrawerVec2D` (defined and documented in this header)
     RudeDrawerVec2D mousePos;
+    // The mouse position delta between frames.
+    // Type: `RudeDrawerVec2D` (defined and documented in this header)
+    RudeDrawerVec2D mouseDelta;
 } RudeDrawerResponse;
 
 // These are all the keyboard keys.

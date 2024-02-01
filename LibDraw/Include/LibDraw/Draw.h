@@ -47,6 +47,8 @@ public:
     void sendPaintEvent(uint32_t id) noexcept(false);
     // Returns the mouse position within a window.
     RudeDrawerVec2D getMousePosition(uint32_t id) noexcept(false);
+    // Returns the mouse position delta between frames.
+    RudeDrawerVec2D getMouseDelta() noexcept(false);
     // Returns a `Display` instance (defined and documented in `Display.h`).
     Display* getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false);
     // Returns a `RudeDrawerEvent` struct (defined and documented in `RudeDrawer.h`).

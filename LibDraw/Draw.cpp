@@ -228,6 +228,24 @@ RudeDrawerVec2D Draw::getMousePosition(uint32_t id) noexcept(false)
     return response.mousePos;
 }
 
+RudeDrawerVec2D Draw::getMouseDelta() noexcept(false)
+{
+    RudeDrawerCommand command;
+    command.kind = RDCMD_GET_MOUSE_DELTA;
+    send(&command, sizeof(RudeDrawerCommand));
+
+    RudeDrawerResponse response;
+    recv(&response, sizeof(RudeDrawerResponse));
+
+    NOTOK(response);
+
+    if (response.kind != RDRESP_MOUSE_DELTA) {
+        throw std::runtime_error("ERROR: response is not of kind `RDRESP_MOUSE_DELTA`");
+    }
+
+    return response.mouseDelta;
+}
+
 Display* Draw::getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false)
 {
     RudeDrawerCommand command;
