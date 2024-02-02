@@ -249,11 +249,13 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
             response.errorKind = RDERROR_OK;
 
             auto mousePosX = m_mousePos.x - m_windows[i]->m_area.x;
-            if (mousePosX < 0)
-                mousePosX = 0;
             auto mousePosY = m_mousePos.y - m_windows[i]->m_area.y;
-            if (mousePosY < 0)
+            auto outOfX = mousePosX < 0 || mousePosX > m_windows[i]->m_area.width;
+            auto outOfY = mousePosY < 0 || mousePosY > m_windows[i]->m_area.height;
+            if (outOfX || outOfY) {
+                mousePosX = 0;
                 mousePosY = 0;
+            }
 
             response.mousePos = RudeDrawerVec2D {
                 .x = (int)mousePosX,

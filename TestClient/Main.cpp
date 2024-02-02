@@ -94,8 +94,11 @@ int main() noexcept(true)
         case RDEVENT_KEYPRESS:
             if (event.key == RDKEY_SPACE) {
                 RudeDrawerVec2D delta;
-                TRY(delta = draw.getMouseDelta())
+                TRY(delta = draw.getMouseDelta());
+                RudeDrawerVec2D pos;
+                TRY(pos = draw.getMousePosition(id));
                 std::cout << "Mouse delta: {" << delta.x << ", " << delta.y << "}\n";
+                std::cout << "Mouse position: {" << pos.x << ", " << pos.y << "}\n";
             } else {
                 std::cout << "Key pressed! " << event.key << "\n";
             }
@@ -113,11 +116,6 @@ int main() noexcept(true)
                 std::cout << "Mouse button pressed! " << event.mouseButton << "\n";
             }
             break;
-        case RDEVENT_MOUSEMOVE: {
-            auto pos = draw.getMousePosition(id);
-            std::cout << "Mouse moved!\n";
-            std::cout << "New position: {" << pos.x << ", " << pos.y << "}\n";
-        } break;
         default:
             break;
         }
