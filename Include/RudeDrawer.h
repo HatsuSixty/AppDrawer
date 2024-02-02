@@ -283,6 +283,8 @@ typedef enum {
     RDEVENT_MOUSEPRESS,
     // A mouse button has been released.
     RDEVENT_MOUSERELEASE,
+    // The mouse has moved.
+    RDEVENT_MOUSEMOVE,
 } RudeDrawerEventKind;
 
 // This struct defines an event that can be sent to a client.

@@ -1,5 +1,6 @@
 #include <ranges>
 #include <raylib.h>
+#include <raymath.h>
 #include <sys/signal.h>
 
 #include "AppDrawer.h"
@@ -270,6 +271,16 @@ int main() noexcept(true)
                 appdrawer->m_windows.back()->sendEvent(mouseEvent);
             }
         }
+
+        if (!appdrawer->m_windows.empty()) {
+            if (!Vector2Equals(Vector2Zero(), GetMouseDelta())
+                && CheckCollisionPointRec(GetMousePosition(), appdrawer->m_windows.back()->m_area)) {
+                RudeDrawerEvent event;
+                event.kind = RDEVENT_MOUSEMOVE;
+                appdrawer->m_windows.back()->sendEvent(event);
+            }
+        }
+
         // Unlock mutex after modifying `appdrawer->m_windows`' contents
         appdrawer->m_windowsMutex.unlock();
 

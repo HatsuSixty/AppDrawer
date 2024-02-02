@@ -113,6 +113,11 @@ int main() noexcept(true)
                 std::cout << "Mouse button pressed! " << event.mouseButton << "\n";
             }
             break;
+        case RDEVENT_MOUSEMOVE: {
+            auto pos = draw.getMousePosition(id);
+            std::cout << "Mouse moved!\n";
+            std::cout << "New position: {" << pos.x << ", " << pos.y << "}\n";
+        } break;
         default:
             break;
         }
