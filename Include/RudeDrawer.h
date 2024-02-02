@@ -30,6 +30,7 @@ typedef enum {
     // Returns: `RDRESP_EMPTY`
     RDCMD_REMOVE_WIN,
     // Makes the server start sending events to the client.
+    // The events will be sent via a separate socket in `/tmp/APDWindowSock<window id>`.
     // The event will be a struct of the type `RudeDrawerEvent` (defined and documented in this header).
     // Required arguments:
     //   - `windowId`
@@ -111,6 +112,9 @@ typedef enum {
     RDERROR_INVALID_WINID,
     // Indicates that `RDCMD_ADD_WIN` failed.
     RDERROR_ADD_WIN_FAILED,
+    // Indicates that the server couldn't start sending
+    // events.
+    RDERROR_CANT_POLL_EVENTS,
     // No error happened.
     RDERROR_OK,
 } RudeDrawerErrorKind;

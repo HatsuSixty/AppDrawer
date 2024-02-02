@@ -19,10 +19,10 @@
 #include "Util.h"
 
 typedef struct {
-    size_t* rectX;
-    size_t* rectDirX;
-    size_t* rectY;
-    size_t* rectDirY;
+    int* rectX;
+    int* rectDirX;
+    int* rectY;
+    int* rectDirY;
     Olivec_Canvas canvas;
     DrawVec2D dims;
 } CallbackParameters;
@@ -49,10 +49,10 @@ int main() noexcept(true)
 #define RECT_WIDTH 100
 #define RECT_HEIGHT 100
 #define RECT_SPD 1
-    size_t rectX = dims.x / 2 - RECT_WIDTH / 2;
-    size_t rectY = (dims.y / 2 - RECT_HEIGHT / 2) + 69;
-    size_t rectDirX = RECT_SPD;
-    size_t rectDirY = -RECT_SPD;
+    int rectX = dims.x / 2 - RECT_WIDTH / 2;
+    int rectY = (dims.y / 2 - RECT_HEIGHT / 2) + 69;
+    int rectDirX = RECT_SPD;
+    int rectDirY = -RECT_SPD;
 
     CallbackParameters params = {
         .rectX = &rectX,

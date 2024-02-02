@@ -1,9 +1,11 @@
 #include "LibDraw/Draw.h"
 
+#include <chrono>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -186,6 +188,34 @@ void Draw::startPollingEventsWindow(uint32_t id) noexcept(false)
     recv(&response, sizeof(RudeDrawerResponse));
 
     NOTOK(response);
+
+    std::cout << "[INFO] Connecting to event socket of window of ID `"
+              << id << "`...\n";
+
+    auto eventSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (eventSocket < 0) {
+        std::ostringstream error;
+        error << "ERROR: could not open socket: "
+              << strerror(errno);
+        throw std::runtime_error(error.str());
+    }
+
+    std::string socketPath = "/tmp/APDWindowSock" + std::to_string(id);
+
+    struct sockaddr_un addr;
+    std::memset(&addr, 0, sizeof(struct sockaddr_un));
+    addr.sun_family = AF_UNIX;
+    std::strncpy(addr.sun_path, socketPath.c_str(), sizeof(addr.sun_path) - 1);
+
+    if (::connect(eventSocket, (struct sockaddr*)&addr, sizeof(struct sockaddr_un)) < 0) {
+        std::ostringstream error;
+        error << "ERROR: could not connect to socket: "
+              << strerror(errno);
+        close(eventSocket);
+        throw std::runtime_error(error.str());
+    }
+
+    m_eventSockets[id] = eventSocket;
 }
 
 void Draw::stopPollingEventsWindow(uint32_t id) noexcept(false)
@@ -199,6 +229,10 @@ void Draw::stopPollingEventsWindow(uint32_t id) noexcept(false)
     recv(&response, sizeof(RudeDrawerResponse));
 
     NOTOK(response);
+
+    auto it = m_eventSockets.find(id);
+    if (it != m_eventSockets.end())
+        close(m_eventSockets[id]);
 }
 
 void Draw::sendPaintEvent(uint32_t id) noexcept(false)
@@ -270,8 +304,24 @@ Display* Draw::getDisplay(uint32_t id, RudeDrawerVec2D dims) noexcept(false)
 
 RudeDrawerEvent Draw::pollEvent(uint32_t id) noexcept(false)
 {
+    auto it = m_eventSockets.find(id);
+    if (it == m_eventSockets.end()) {
+        std::ostringstream error;
+        error << "ERROR: window of id `" << id << "` is not polling events";
+        throw std::runtime_error(error.str());
+    }
+    auto eventSocket = it->second;
+
     RudeDrawerEvent event;
-    recv(&event, sizeof(RudeDrawerEvent));
+    auto numOfBytesRecvd = ::recv(eventSocket, &event, sizeof(RudeDrawerEvent), 0);
+    if (numOfBytesRecvd < 0) {
+        std::ostringstream error;
+        error << "ERROR: could not receive data from server: "
+              << strerror(errno);
+        close(eventSocket);
+        throw std::runtime_error(error.str());
+    }
+
     if (event.kind == RDEVENT_PAINT) {
         auto it = m_callbacks.find(id);
         if (it != m_callbacks.end()) {

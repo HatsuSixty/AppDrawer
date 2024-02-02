@@ -4,6 +4,7 @@
 #include <raylib.h>
 #include <vector>
 #include <mutex>
+#include <unordered_set>
 
 #include "RudeDrawer.h"
 #include "Window.h"
@@ -31,10 +32,11 @@ private:
     int m_fd;
     Vector2 m_mousePos;
     Vector2 m_previousMousePos;
+    std::unordered_set<uint32_t> m_windowsWithEventSockets;
 
     void listener() noexcept(true);
     void handleClient(int clientFd) noexcept(true);
-    void pollEvents(Window* window, Client& client) noexcept(true);
+    void pollEvents(Window* window) noexcept(true);
 
 public:
     std::mutex m_windowsMutex;
