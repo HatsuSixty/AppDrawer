@@ -54,17 +54,19 @@ Window::Window(std::string title, uint32_t width, uint32_t height, uint32_t id) 
     std::memset(m_pixels, 0xFF, m_pixelsShmSize);
 }
 
-#define DEBUG_PAINT_EVENT false
+#define DEBUG_NONLOGGED_EVENTS false
 
 void Window::sendEvent(RudeDrawerEvent event) noexcept(true)
 {
-    if (event.kind != RDEVENT_PAINT || DEBUG_PAINT_EVENT)
+    if ((event.kind != RDEVENT_PAINT && event.kind != RDEVENT_MOUSEMOVE)
+        || DEBUG_NONLOGGED_EVENTS)
         std::cout << "[INFO] Sending event of ID `" << event.kind
                   << "` to window of ID `" << m_id << "`\n";
     if (m_events.isPolling) {
         m_events.events.push_back(event);
     } else {
-        if (event.kind != RDEVENT_PAINT || DEBUG_PAINT_EVENT)
+        if ((event.kind != RDEVENT_PAINT && event.kind != RDEVENT_MOUSEMOVE)
+            || DEBUG_NONLOGGED_EVENTS)
             std::cout << "[WARN] Window not polling events, not sending...\n";
     }
 }
