@@ -4,6 +4,9 @@ project('AppDrawer', 'cpp',
 
 incdir = include_directories('Include')
 
+raylib_proj = subproject('raylib')
+raylib = raylib_proj.get_variable('raylib')
+
 subdir('AppDrawer')
 subdir('LibDraw')
 subdir('TestClient')

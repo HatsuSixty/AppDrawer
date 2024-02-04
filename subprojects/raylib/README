@@ -1,0 +1,2 @@
+Stripped down everything except `./LICENSE` and `./src`.
+Heavily modified raylib version.
