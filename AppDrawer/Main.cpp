@@ -1,6 +1,7 @@
 #include <ranges>
 #include <raylib.h>
 #include <raymath.h>
+#include <string.h>
 #include <sys/signal.h>
 
 #include "AppDrawer.h"
@@ -201,10 +202,21 @@ int main() noexcept(true)
         RDKEY_KP_EQUAL
     };
 
-    auto appdrawer = new AppDrawer();
-    TRY(appdrawer->startServer());
+    auto ruid = getuid();
+    auto rgid = getgid();
 
     InitWindow(WIDTH, HEIGHT, "AppDrawer");
+
+    if (seteuid(ruid) < 0) {
+        fprintf(stderr, "WARNING: Could not set Effective UID to the real one: %s\n", strerror(errno));
+    }
+
+    if (setegid(rgid) < 0) {
+        fprintf(stderr, "WARNING: Could not set Effective GID to the real one: %s\n", strerror(errno));
+    }
+
+    auto appdrawer = new AppDrawer();
+    TRY(appdrawer->startServer());
 
     SetTraceLogLevel(LOG_WARNING);
     while (!WindowShouldClose()) {
