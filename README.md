@@ -12,7 +12,7 @@ If you want to know how to write an application for AppDrawer, read [LibDraw's R
 
 Please not that you will need to have [`meson`](https://mesonbuild.com/) installed:
 ```console
-$ meson build
+$ meson build # or add `-Draylib:platform=PLATFORM_DRM` for DRM support
 $ meson compile -C build
 ```
 
@@ -27,6 +27,13 @@ On another terminal:
 $ ./build/TestClient/TestClient
 ```
 If everything works correctly, it should open a window inside AppDrawer, and close it when you click the close button.
+
+### Testing on the TTY
+
+To run AppDrawer on a TTY, AppDrawer must've been built with `-Draylib:platform=PLATFORM_DRM`.
+```console
+$ ./start.sh
+```
 
 ## Credits
 
