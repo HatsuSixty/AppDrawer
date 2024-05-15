@@ -13,7 +13,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "Consts.h"
 #include "RudeDrawer.h"
 
 Window::Window(std::string title, uint32_t width, uint32_t height, uint32_t id) noexcept(false)
@@ -21,8 +20,8 @@ Window::Window(std::string title, uint32_t width, uint32_t height, uint32_t id) 
     m_title = title;
     m_area.width = width;
     m_area.height = height;
-    m_area.x = (float)WIDTH / 2 - (float)width / 2;
-    m_area.y = (float)HEIGHT / 2 - (float)height / 2;
+    m_area.x = (float)GetScreenWidth() / 2 - (float)width / 2;
+    m_area.y = (float)GetScreenHeight() / 2 - (float)height / 2;
     m_id = id;
 
     m_pixelsShmSize = width * height * COMPONENTS;

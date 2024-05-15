@@ -5,7 +5,6 @@
 #include <sys/signal.h>
 
 #include "AppDrawer.h"
-#include "Consts.h"
 #include "RudeDrawer.h"
 #include "Util.h"
 
@@ -205,7 +204,7 @@ int main() noexcept(true)
     auto ruid = getuid();
     auto rgid = getgid();
 
-    InitWindow(WIDTH, HEIGHT, "AppDrawer");
+    InitWindow(640, 480, "AppDrawer");
 
     if (seteuid(ruid) < 0) {
         fprintf(stderr, "WARNING: Could not set Effective UID to the real one: %s\n", strerror(errno));
