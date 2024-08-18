@@ -1,1 +1,0 @@
-option('platform', type : 'string', value : 'PLATFORM_DESKTOP', description : 'Raylib platform backend')

@@ -3,7 +3,7 @@ executable('AppDrawer', [
   'Window.cpp',
   'AppDrawer.cpp',
 ], dependencies : [
-  raylib,
+  dependency('raylib'),
 ], include_directories : [
   incdir,
 ])
