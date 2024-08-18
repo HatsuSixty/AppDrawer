@@ -8,7 +8,7 @@
 class Display {
 private:
     int m_pixelsShmFd;
-    size_t m_pixelsShmSize;
+    int m_pixelsShmSize;
     uint32_t m_windowId;
 public:
     // A pointer to RGBA data.

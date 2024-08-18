@@ -14,7 +14,7 @@
 
 #include "RudeDrawer.h"
 
-void Draw::send(void* data, size_t n) noexcept(false)
+void Draw::send(void* data, int n) noexcept(false)
 {
     if (::send(m_socket, data, n, 0) < 0) {
         std::ostringstream error;
@@ -24,7 +24,7 @@ void Draw::send(void* data, size_t n) noexcept(false)
     }
 }
 
-void Draw::recv(void* data, size_t n) noexcept(false)
+void Draw::recv(void* data, int n) noexcept(false)
 {
     auto numOfBytesRecvd = ::recv(m_socket, data, n, 0);
     if (numOfBytesRecvd < 0) {

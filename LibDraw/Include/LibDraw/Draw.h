@@ -24,8 +24,8 @@ private:
     std::unordered_map<uint32_t, DrawCallback*> m_callbacks;
     std::unordered_map<uint32_t, int> m_eventSockets;
 
-    void send(void* data, size_t n) noexcept(false);
-    void recv(void* data, size_t n) noexcept(false);
+    void send(void* data, int n) noexcept(false);
+    void recv(void* data, int n) noexcept(false);
 public:
     // Connects to the AppDrawer server.
     void connect() noexcept(false);

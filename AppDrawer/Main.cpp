@@ -13,7 +13,7 @@
 
 void closeButton(AppDrawer* appdrawer, Window* window, Rectangle titleBarRect) noexcept(true)
 {
-    auto active = window->m_id == appdrawer->m_windows.back()->m_id;
+    auto active = window->m_id == appdrawer->topWindow()->m_id;
 
     Rectangle closeButtonRect = {
         .x = titleBarRect.x,
@@ -35,7 +35,7 @@ void closeButton(AppDrawer* appdrawer, Window* window, Rectangle titleBarRect) n
 
 void titleBar(AppDrawer* appdrawer, Window* window) noexcept(true)
 {
-    auto active = window->m_id == appdrawer->m_windows.back()->m_id;
+    auto active = window->m_id == appdrawer->topWindow()->m_id;
 
     Rectangle titleBarRect = {
         .x = window->m_area.x - BORDER_THICKNESS,
@@ -224,10 +224,12 @@ int main() noexcept(true)
 
         Texture2D texture;
         // Lock mutex before modifying `appdrawer->m_windows`' contents
-        appdrawer->m_windowsMutex.lock();
+        appdrawer->lockWindows();
 
         // Draw windows
-        for (auto w : appdrawer->m_windows) {
+        for (auto i = 0; i < appdrawer->windowCount(); ++i) {
+            auto w = appdrawer->windowIndex(i);
+
             BeginScissorMode(w->m_area.x, w->m_area.y, w->m_area.width, w->m_area.height);
             Image image = {
                 .data = w->m_pixels,
@@ -244,7 +246,7 @@ int main() noexcept(true)
         }
 
         // Handle key events
-        for (size_t i = 0; i < sizeof(allKeys) / sizeof(allKeys[0]) && !appdrawer->m_windows.empty(); ++i) {
+        for (unsigned long i = 0; i < sizeof(allKeys) / sizeof(allKeys[0]) && appdrawer->windowCount() != 0; ++i) {
             RudeDrawerEventKind eventKind;
             if (IsKeyPressed(allKeys[i]))
                 eventKind = RDEVENT_KEYPRESS;
@@ -256,11 +258,11 @@ int main() noexcept(true)
             RudeDrawerEvent event;
             event.kind = eventKind;
             event.key = allKeys[i];
-            appdrawer->m_windows.back()->sendEvent(event);
+            appdrawer->topWindow()->sendEvent(event);
         }
 
         // Handle mouse events
-        if (!appdrawer->m_windows.empty()) {
+        if (appdrawer->windowCount() != 0) {
             RudeDrawerEvent mouseEvent;
             mouseEvent.kind = (RudeDrawerEventKind)0;
             auto mouseWheelMove = GetMouseWheelMove();
@@ -279,26 +281,26 @@ int main() noexcept(true)
             }
 
             if (mouseEvent.kind != 0) {
-                appdrawer->m_windows.back()->sendEvent(mouseEvent);
+                appdrawer->topWindow()->sendEvent(mouseEvent);
             }
         }
 
-        if (!appdrawer->m_windows.empty()) {
+        if (appdrawer->windowCount() != 0) {
             if (!Vector2Equals(Vector2Zero(), GetMouseDelta())
-                && CheckCollisionPointRec(GetMousePosition(), appdrawer->m_windows.back()->m_area)) {
+                && CheckCollisionPointRec(GetMousePosition(), appdrawer->topWindow()->m_area)) {
                 RudeDrawerEvent event;
                 event.kind = RDEVENT_MOUSEMOVE;
-                appdrawer->m_windows.back()->sendEvent(event);
+                appdrawer->topWindow()->sendEvent(event);
             }
         }
 
         // Unlock mutex after modifying `appdrawer->m_windows`' contents
-        appdrawer->m_windowsMutex.unlock();
+        appdrawer->unlockWindows();
 
         // Handle window focus
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !appdrawer->m_windows.empty()) {
-            for (auto i = appdrawer->m_windows.size() - 1; i-- > 0;) {
-                auto& w = appdrawer->m_windows[i];
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && appdrawer->windowCount() != 0) {
+            for (auto i = appdrawer->windowCount() - 1; i-- > 0;) {
+                auto w = appdrawer->windowIndex(i);
 
                 auto windowArea = w->m_area;
                 windowArea.y -= BORDER_THICKNESS + TITLEBAR_THICKNESS;
@@ -307,7 +309,7 @@ int main() noexcept(true)
                 windowArea.height += TITLEBAR_THICKNESS + BORDER_THICKNESS * 2;
 
                 if (CheckCollisionPointRec(GetMousePosition(), windowArea)) {
-                    if (w->m_id != appdrawer->m_windows.back()->m_id) {
+                    if (w->m_id != appdrawer->topWindow()->m_id) {
                         appdrawer->changeActiveWindow(w->m_id);
                     }
                     break;

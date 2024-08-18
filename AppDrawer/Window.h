@@ -21,7 +21,7 @@ public:
     uint8_t* m_pixels;
     std::string m_pixelsShmName;
     int m_pixelsShmFd;
-    size_t m_pixelsShmSize;
+    int m_pixelsShmSize;
 
     uint32_t m_id;
     Rectangle m_area;

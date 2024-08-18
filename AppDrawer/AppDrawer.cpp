@@ -26,7 +26,7 @@ Client::Client(int sockfd) noexcept(true)
     this->m_sockfd = sockfd;
 }
 
-ClientResult Client::receiveOrFail(void* data, size_t n) noexcept(true)
+ClientResult Client::receiveOrFail(void* data, int n) noexcept(true)
 {
     int numBytesReceived = recv(m_sockfd, data, n, 0);
     if (numBytesReceived < 0) {
@@ -40,7 +40,7 @@ ClientResult Client::receiveOrFail(void* data, size_t n) noexcept(true)
     return CLIENT_OK;
 }
 
-ClientResult Client::sendOrFail(void* data, size_t n) noexcept(true)
+ClientResult Client::sendOrFail(void* data, int n) noexcept(true)
 {
     if (send(m_sockfd, data, n, 0) < 0) {
         std::cerr << "ERROR: could not send data to the client: "
@@ -377,15 +377,15 @@ uint32_t AppDrawer::addWindow(std::string title, RudeDrawerVec2D dims) noexcept(
     return id;
 }
 
-void AppDrawer::setMousePosition(Vector2 mousePos)
+void AppDrawer::setMousePosition(Vector2 mousePos) noexcept(true)
 {
     m_previousMousePos = m_mousePos;
     m_mousePos = mousePos;
 }
 
-size_t AppDrawer::findWindow(uint32_t id) noexcept(false)
+int AppDrawer::findWindow(uint32_t id) noexcept(false)
 {
-    for (size_t i = 0; i < m_windows.size(); ++i) {
+    for (unsigned long i = 0; i < m_windows.size(); ++i) {
         if (m_windows[i]->m_id == id) {
             return i;
         }
@@ -483,4 +483,29 @@ AppDrawer::~AppDrawer() noexcept(true)
         }
     }
     close(m_fd);
+}
+
+void AppDrawer::lockWindows() noexcept(true)
+{
+    m_windowsMutex.lock();
+}
+
+void AppDrawer::unlockWindows() noexcept(true)
+{
+    m_windowsMutex.unlock();
+}
+
+Window* AppDrawer::topWindow() noexcept(true)
+{
+    return m_windows.back();
+}
+
+int AppDrawer::windowCount() noexcept(true)
+{
+    return m_windows.size();
+}
+
+Window* AppDrawer::windowIndex(int index) noexcept(false)
+{
+    return m_windows[index];
 }

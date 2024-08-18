@@ -21,8 +21,8 @@ private:
 
 public:
     Client(int sockfd) noexcept(true);
-    ClientResult receiveOrFail(void* data, size_t n) noexcept(true);
-    ClientResult sendOrFail(void* data, size_t n) noexcept(true);
+    ClientResult receiveOrFail(void* data, int n) noexcept(true);
+    ClientResult sendOrFail(void* data, int n) noexcept(true);
     ClientResult sendErrOrFail(RudeDrawerErrorKind err) noexcept(true);
 };
 
@@ -34,22 +34,29 @@ private:
     Vector2 m_previousMousePos;
     std::unordered_set<uint32_t> m_windowsWithEventSockets;
 
-    void listener() noexcept(true);
-    void handleClient(int clientFd) noexcept(true);
-    void pollEvents(Window* window) noexcept(true);
-
-public:
     std::mutex m_windowsMutex;
     std::vector<Window*> m_windows;
 
-    AppDrawer() noexcept(false);
+    void listener() noexcept(true);
+    void handleClient(int clientFd) noexcept(true);
+    void pollEvents(Window* window) noexcept(true);
+    int findWindow(uint32_t id) noexcept(false);
 
-    void setMousePosition(Vector2 mousePos);
-    size_t findWindow(uint32_t id) noexcept(false);
     uint32_t addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false);
     void removeWindow(uint32_t id) noexcept(false);
     void setWindowPolling(uint32_t id, bool polling) noexcept(false);
+
+public:
+    void lockWindows() noexcept(true);
+    void unlockWindows() noexcept(true);
+
+    Window* topWindow() noexcept(true);
+    Window* windowIndex(int index) noexcept(false);
+    int windowCount() noexcept(true);
     void changeActiveWindow(uint32_t id) noexcept(false);
 
+    void setMousePosition(Vector2 mousePos) noexcept(true);
+
+    AppDrawer() noexcept(false);
     ~AppDrawer() noexcept(true);
 };
