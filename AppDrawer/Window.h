@@ -8,6 +8,8 @@
 
 #include "RudeDrawer.h"
 
+#include "ErrorHandling.h"
+
 struct WindowEvents {
     bool isPolling;
     bool running = true;
@@ -28,7 +30,8 @@ public:
     WindowEvents m_events;
     bool m_isDragging;
 
-    Window(std::string title, uint32_t width, uint32_t height, uint32_t id) noexcept(false);
+    static Result<void*, Window*> create(std::string title, uint32_t width, uint32_t height, uint32_t id);
+
     void sendEvent(RudeDrawerEvent event) noexcept(true);
-    void destroy() noexcept(false);
+    Result<void*, void*> destroy();
 };

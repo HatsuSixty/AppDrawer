@@ -4,6 +4,9 @@
 #include <string.h>
 #include <sys/signal.h>
 
+#define ERROR_HANDLING_IMPLEMENTATION
+#include "ErrorHandling.h"
+
 #include "AppDrawer.h"
 #include "RudeDrawer.h"
 #include "Util.h"
@@ -214,8 +217,7 @@ int main() noexcept(true)
         fprintf(stderr, "WARNING: Could not set Effective GID to the real one: %s\n", strerror(errno));
     }
 
-    AppDrawer* appdrawer;
-    TRY(appdrawer = new AppDrawer());
+    AppDrawer* appdrawer = new AppDrawer();
 
     SetTraceLogLevel(LOG_WARNING);
     while (!WindowShouldClose()) {

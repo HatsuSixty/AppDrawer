@@ -9,6 +9,8 @@
 #include "RudeDrawer.h"
 #include "Window.h"
 
+#include "ErrorHandling.h"
+
 enum ClientResult {
     CLIENT_CLOSED,
     CLIENT_OK,
@@ -40,11 +42,11 @@ private:
     void listener() noexcept(true);
     void handleClient(int clientFd) noexcept(true);
     void pollEvents(Window* window) noexcept(true);
-    int findWindow(uint32_t id) noexcept(false);
+    Result<void*, int> findWindow(uint32_t id) noexcept(false);
 
-    uint32_t addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false);
-    void removeWindow(uint32_t id) noexcept(false);
-    void setWindowPolling(uint32_t id, bool polling) noexcept(false);
+    Result<void*, uint32_t> addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false);
+    Result<void*, void*> removeWindow(uint32_t id) noexcept(false);
+    Result<void*, void*> setWindowPolling(uint32_t id, bool polling) noexcept(false);
 
 public:
     void lockWindows() noexcept(true);
@@ -53,7 +55,7 @@ public:
     Window* topWindow() noexcept(true);
     Window* windowIndex(int index) noexcept(false);
     int windowCount() noexcept(true);
-    void changeActiveWindow(uint32_t id) noexcept(false);
+    Result<void*, void*> changeActiveWindow(uint32_t id) noexcept(false);
 
     void setMousePosition(Vector2 mousePos) noexcept(true);
 

@@ -2,18 +2,18 @@
 #define ERROR_HANDLING_H_
 
 #include <cassert>
+#include <cstdlib>
 
 template<typename E, typename V>
 class Result {
 private:
-    V* value;
-    E* error;
+    bool isError;
+    V value;
+    E error;
 
 public:
     static Result fromValue(V value);
     static Result fromError(E error);
-
-    ~Result();
 
     bool isOk() const;
     V getValue() const;
@@ -26,49 +26,42 @@ public:
     Result onValue(F&& function);
 };
 
-#ifdef ERROR_HANDLING_IMPLEMENTATION
-
 template<typename E, typename V>
 Result<E, V> Result<E, V>::fromValue(V value)
 {
-    value = malloc(sizeof(V));
-    error = nullptr;
+    Result<E, V> result;
+    result.value = value;
+    result.isError = false;
+    return result;
 }
 
 template<typename E, typename V>
 Result<E, V> Result<E, V>::fromError(E error)
 {
-    error = malloc(sizeof(E));
-    value = nullptr;
-}
-
-template<typename E, typename V>
-Result<E, V>::~Result()
-{
-    if (value)
-        free(value);
-    if (error)
-        free(error);
+    Result<E, V> result;
+    result.error = error;
+    result.isError = true;
+    return result;
 }
 
 template<typename E, typename V>
 bool Result<E, V>::isOk() const
 {
-    return value != nullptr;
+    return !isError;
 }
 
 template<typename E, typename V>
 V Result<E, V>::getValue() const
 {
-    assert(value);
-    return *value;
+    assert(isOk());
+    return value;
 }
 
 template<typename E, typename V>
 E Result<E, V>::getError() const
 {
-    assert(error);
-    return *error;
+    assert(!isOk());
+    return error;
 }
 
 template<typename E, typename V>
@@ -86,7 +79,5 @@ Result<E, V> Result<E, V>::onValue(F&& function)
     if (isOk()) function();
     return *this;
 }
-
-#endif // ERROR_HANDLING_IMPLEMENTATION
 
 #endif // ERROR_HANDLING_H

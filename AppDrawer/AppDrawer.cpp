@@ -108,15 +108,13 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
                       << "\n";
             std::string title((char*)command.windowTitle);
 
-            uint32_t id;
-            try {
-                id = addWindow(title, command.windowDims);
-            } catch (std::runtime_error const& e) {
-                std::cerr << e.what() << "\n";
-                if (client.sendErrOrFail(RDERROR_ADD_WIN_FAILED) != CLIENT_OK)
-                    continue;
+            auto res = addWindow(title, command.windowDims);
+            if (!res.isOk()) {
+                client.sendErrOrFail(RDERROR_ADD_WIN_FAILED);
                 continue;
             }
+            auto id = res.getValue();
+
             std::cout << "    -> ID: " << id << "\n";
 
             RudeDrawerResponse response;
@@ -126,79 +124,81 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
             if (client.sendOrFail(&response, sizeof(RudeDrawerResponse)) != CLIENT_OK)
                 continue;
         } break;
-        case RDCMD_REMOVE_WIN:
+        case RDCMD_REMOVE_WIN: {
             std::cout << "  => Removing window\n";
             std::cout << "    -> ID: " << command.windowId << "\n";
-            try {
-                removeWindow(command.windowId);
-            } catch (std::runtime_error const& e) {
-                std::cerr << e.what() << "\n";
-                if (client.sendErrOrFail(RDERROR_INVALID_WINID) != CLIENT_OK)
-                    continue;
-                continue;
-            }
-            if (client.sendErrOrFail(RDERROR_OK) != CLIENT_OK)
-                continue;
-            break;
-        case RDCMD_START_POLLING_EVENTS_WIN: {
-            std::cout << "  => Starting polling events for window\n";
-            std::cout << "    -> ID: " << command.windowId << "\n";
-            try {
-                setWindowPolling(command.windowId, true);
 
-                auto i = findWindow(command.windowId);
-                std::thread thread(&AppDrawer::pollEvents, this, m_windows[i]);
-                thread.detach();
-
-                auto timeout = 0;
-                auto timeoutLimit = 9999999;
-                while (!m_windowsWithEventSockets.contains(command.windowId)) {
-                    timeout += 1;
-                    if (timeout >= timeoutLimit) {
-                        std::cerr << "ERROR: timed out when waiting for event socket to"
-                                  << " be available (window id `" << command.windowId << "`)\n";
-                        client.sendErrOrFail(RDERROR_CANT_POLL_EVENTS);
-                        break;
-                    }
-                }
-                if (timeout >= timeoutLimit)
-                    continue;
-            } catch (std::runtime_error const& e) {
-                std::cerr << e.what() << "\n";
-                if (client.sendErrOrFail(RDERROR_INVALID_WINID) != CLIENT_OK)
-                    continue;
+            auto res = removeWindow(command.windowId);
+            if (!res.isOk()) {
+                client.sendErrOrFail(RDERROR_INVALID_WINID);
                 continue;
             }
 
             if (client.sendErrOrFail(RDERROR_OK) != CLIENT_OK)
                 continue;
         } break;
-        case RDCMD_STOP_POLLING_EVENTS_WIN:
-            std::cout << "  => Stopping polling events for window\n";
+        case RDCMD_START_POLLING_EVENTS_WIN: {
+            std::cout << "  => Starting polling events for window\n";
             std::cout << "    -> ID: " << command.windowId << "\n";
-            try {
-                setWindowPolling(command.windowId, false);
-            } catch (std::runtime_error const& e) {
-                std::cerr << e.what() << "\n";
-                if (client.sendErrOrFail(RDERROR_INVALID_WINID) != CLIENT_OK)
-                    continue;
+
+            auto res1 = setWindowPolling(command.windowId, true);
+            if (!res1.isOk()) {
+                client.sendErrOrFail(RDERROR_INVALID_WINID);
                 continue;
             }
+
+            auto res2 = findWindow(command.windowId);
+            if (!res2.isOk()) {
+                client.sendErrOrFail(RDERROR_INVALID_WINID);
+                continue;
+            }
+            auto i = res2.getValue();
+
+            std::thread thread(&AppDrawer::pollEvents, this, m_windows[i]);
+            thread.detach();
+
+            auto timeout = 0;
+            auto timeoutLimit = 9999999;
+            while (!m_windowsWithEventSockets.contains(command.windowId)) {
+                timeout += 1;
+                if (timeout >= timeoutLimit) {
+                    std::cerr << "ERROR: timed out when waiting for event socket to"
+                                << " be available (window id `" << command.windowId << "`)\n";
+                    client.sendErrOrFail(RDERROR_CANT_POLL_EVENTS);
+                    break;
+                }
+            }
+
+            if (timeout >= timeoutLimit)
+                continue;
+
             if (client.sendErrOrFail(RDERROR_OK) != CLIENT_OK)
                 continue;
-            break;
+        } break;
+        case RDCMD_STOP_POLLING_EVENTS_WIN: {
+            std::cout << "  => Stopping polling events for window\n";
+            std::cout << "    -> ID: " << command.windowId << "\n";
+
+            auto res = setWindowPolling(command.windowId, false);
+            if (!res.isOk()) {
+                client.sendErrOrFail(RDERROR_INVALID_WINID);
+                continue;
+            }
+
+            if (client.sendErrOrFail(RDERROR_OK) != CLIENT_OK)
+                continue;
+
+        } break;
         case RDCMD_GET_DISPLAY_SHM_WIN: {
             std::cout << "  => Getting window display's shared memory\n";
             std::cout << "    -> ID: " << command.windowId << "\n";
-            uint32_t i;
-            try {
-                i = findWindow(command.windowId);
-            } catch (std::runtime_error const& e) {
-                std::cerr << e.what() << "\n";
-                if (client.sendErrOrFail(RDERROR_INVALID_WINID) != CLIENT_OK)
-                    continue;
+
+            auto res = findWindow(command.windowId);
+            if (!res.isOk()) {
+                client.sendErrOrFail(RDERROR_INVALID_WINID);
                 continue;
             }
+            auto i = res.getValue();
 
             auto shmName = m_windows[i]->m_pixelsShmName;
 
@@ -216,15 +216,12 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
             std::cout << "  => Sending paint event to window\n";
             std::cout << "    -> ID: " << command.windowId << "\n";
 
-            uint32_t i;
-            try {
-                i = findWindow(command.windowId);
-            } catch (std::runtime_error const& e) {
-                std::cerr << e.what() << "\n";
-                if (client.sendErrOrFail(RDERROR_INVALID_WINID) != CLIENT_OK)
-                    continue;
+            auto res = findWindow(command.windowId);
+            if (!res.isOk()) {
+                client.sendErrOrFail(RDERROR_INVALID_WINID);
                 continue;
             }
+            auto i = res.getValue();
 
             RudeDrawerEvent event;
             event.kind = RDEVENT_PAINT;
@@ -234,15 +231,13 @@ void AppDrawer::handleClient(int clientFd) noexcept(true)
             std::cout << "  => Getting mouse position within window\n";
             std::cout << "    -> ID: " << command.windowId << "\n";
 
-            uint32_t i;
-            try {
-                i = findWindow(command.windowId);
-            } catch (std::runtime_error const& e) {
-                std::cerr << e.what() << "\n";
+            auto res = findWindow(command.windowId);
+            if (!res.isOk()) {
                 if (client.sendErrOrFail(RDERROR_INVALID_WINID) != CLIENT_OK)
                     continue;
                 continue;
             }
+            auto i = res.getValue();
 
             RudeDrawerResponse response;
             response.kind = RDRESP_MOUSE_POSITION;
@@ -317,13 +312,13 @@ void AppDrawer::pollEvents(Window* window) noexcept(true)
         std::memset(&serverAddr, 0, sizeof(struct sockaddr_un));
         serverAddr.sun_family = AF_UNIX;
         std::strncpy(serverAddr.sun_path, socketPath.c_str(),
-                     sizeof(serverAddr.sun_path) - 1);
+            sizeof(serverAddr.sun_path) - 1);
 
         auto opt = SO_REUSEADDR;
         setsockopt(serverEventSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
         if (bind(serverEventSocket, (struct sockaddr*)&serverAddr,
-                 sizeof(struct sockaddr_un))
+                sizeof(struct sockaddr_un))
             < 0) {
             std::cerr << "ERROR: could not bind to socket: " << strerror(errno) << "\n";
             goto exit;
@@ -367,14 +362,21 @@ exit:
     std::cout << "Exiting `pollEvents()` thread...\n";
 }
 
-uint32_t AppDrawer::addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false)
+Result<void*, uint32_t> AppDrawer::addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false)
 {
     std::lock_guard<std::mutex> guard(m_windowsMutex);
 
     auto id = m_windowId++;
-    Window* window = new Window(title, dims.x, dims.y, id);
+
+    auto res = Window::create(title, dims.x, dims.y, id);
+    if (!res.isOk()) {
+        return Result<void*, uint32_t>::fromError(nullptr);
+    }
+
+    Window* window = res.getValue();
     m_windows.push_back(window);
-    return id;
+
+    return Result<void*, uint32_t>::fromValue(id);
 }
 
 void AppDrawer::setMousePosition(Vector2 mousePos) noexcept(true)
@@ -383,73 +385,90 @@ void AppDrawer::setMousePosition(Vector2 mousePos) noexcept(true)
     m_mousePos = mousePos;
 }
 
-int AppDrawer::findWindow(uint32_t id) noexcept(false)
+Result<void*, int> AppDrawer::findWindow(uint32_t id) noexcept(false)
 {
     for (unsigned long i = 0; i < m_windows.size(); ++i) {
         if (m_windows[i]->m_id == id) {
-            return i;
+            return Result<void*, int>::fromValue(i);
         }
     }
-    std::ostringstream error;
-    error << "ERROR: could not find window of ID `"
-          << id << "`";
-    throw std::runtime_error(error.str());
+
+    std::cerr << "ERROR: could not find window of ID `" << id << "`\n";
+    return Result<void*, int>::fromError(nullptr);
 }
 
-void AppDrawer::removeWindow(uint32_t id) noexcept(false)
+Result<void*, void*> AppDrawer::removeWindow(uint32_t id) noexcept(false)
 {
     std::lock_guard<std::mutex> guard(m_windowsMutex);
 
-    auto i = findWindow(id);
+    auto res1 = findWindow(id);
+    if (!res1.isOk()) {
+        return Result<void*, void*>::fromError(nullptr);
+    }
+    auto i = res1.getValue();
 
     m_windows[i]->m_events.isPolling = false;
     // Wait for `pollEvents` thread to exit
     while (m_windows[i]->m_events.running)
         asm("nop");
 
-    try {
-        m_windows[i]->destroy();
-    } catch (std::runtime_error const& e) {
-        std::cerr << e.what() << "\n";
-        return;
+    auto res2 = m_windows[i]->destroy();
+    if (!res2.isOk()) {
+        return Result<void*, void*>::fromError(nullptr);
     }
+
     delete m_windows[i];
+
     m_windows.erase(m_windows.begin() + i);
+
+    return Result<void*, void*>::fromValue(nullptr);
 }
 
-void AppDrawer::setWindowPolling(uint32_t id, bool polling) noexcept(false)
+Result<void*, void*> AppDrawer::setWindowPolling(uint32_t id, bool polling) noexcept(false)
 {
-    auto i = findWindow(id);
+    auto res = findWindow(id);
+    if (!res.isOk()) {
+        return Result<void*, void*>::fromError(nullptr);
+    }
+    auto i = res.getValue();
     m_windows[i]->m_events.isPolling = polling;
+
+    return Result<void*, void*>::fromValue(nullptr);
 }
 
-void AppDrawer::changeActiveWindow(uint32_t id) noexcept(false)
+Result<void*, void*> AppDrawer::changeActiveWindow(uint32_t id)
 {
     std::lock_guard<std::mutex> guard(m_windowsMutex);
 
-    auto windowIndex = findWindow(id);
+    auto res = findWindow(id);
+    if (!res.isOk()) {
+        return Result<void*, void*>::fromError(nullptr);
+    }
+    auto windowIndex = res.getValue();
+
     auto window = m_windows[windowIndex];
     m_windows.erase(m_windows.begin() + windowIndex);
     m_windows.push_back(window);
+
+    return Result<void*, void*>::fromValue(nullptr);
 }
 
 AppDrawer::AppDrawer() noexcept(false)
 {
     if (fileExists(SOCKET_PATH))
         if (std::remove(SOCKET_PATH) != 0) {
-            std::ostringstream error;
-            error << "ERROR: could not remove `"
-                  << SOCKET_PATH
-                  << "`: " << strerror(errno);
-            throw std::runtime_error(error.str());
+            std::cerr << "ERROR: could not remove `"
+                      << SOCKET_PATH
+                      << "`: " << strerror(errno)
+                      << "\n";
+            exit(1);
         }
 
     m_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (m_fd < 0) {
-        std::ostringstream error;
-        error << "ERROR: could not open socket: `"
-              << SOCKET_PATH << "`\n";
-        throw std::runtime_error(error.str());
+        std::cerr << "ERROR: could not open socket: `"
+                  << SOCKET_PATH << "`\n";
+        exit(1);
     }
 
     struct sockaddr_un serverAddr;
@@ -464,9 +483,8 @@ AppDrawer::AppDrawer() noexcept(false)
     if (bind(m_fd, (struct sockaddr*)&serverAddr,
             sizeof(struct sockaddr_un))
         < 0) {
-        std::ostringstream error;
-        error << "ERROR: could not bind to socket: " << strerror(errno);
-        throw std::runtime_error(error.str());
+        std::cerr << "ERROR: could not bind to socket: " << strerror(errno) << "\n";
+        exit(1);
     }
 
     std::thread thread(&AppDrawer::listener, this);
@@ -476,11 +494,7 @@ AppDrawer::AppDrawer() noexcept(false)
 AppDrawer::~AppDrawer() noexcept(true)
 {
     for (auto& w : m_windows) {
-        try {
-            w->destroy();
-        } catch (std::runtime_error const& e) {
-            std::cerr << e.what() << "\n";
-        }
+        w->destroy();
     }
     close(m_fd);
 }

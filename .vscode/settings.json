@@ -1,5 +1,11 @@
 {
     "files.associations": {
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "*.tcc": "cpp",
+        "string_view": "cpp",
+        "format": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "variant": "cpp"
     }
 }
