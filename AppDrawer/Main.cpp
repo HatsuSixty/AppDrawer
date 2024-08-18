@@ -214,8 +214,8 @@ int main() noexcept(true)
         fprintf(stderr, "WARNING: Could not set Effective GID to the real one: %s\n", strerror(errno));
     }
 
-    auto appdrawer = new AppDrawer();
-    TRY(appdrawer->startServer());
+    AppDrawer* appdrawer;
+    TRY(appdrawer = new AppDrawer());
 
     SetTraceLogLevel(LOG_WARNING);
     while (!WindowShouldClose()) {

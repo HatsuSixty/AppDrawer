@@ -433,7 +433,7 @@ void AppDrawer::changeActiveWindow(uint32_t id) noexcept(false)
     m_windows.push_back(window);
 }
 
-void AppDrawer::startServer() noexcept(false)
+AppDrawer::AppDrawer() noexcept(false)
 {
     if (fileExists(SOCKET_PATH))
         if (std::remove(SOCKET_PATH) != 0) {

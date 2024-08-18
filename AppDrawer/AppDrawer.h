@@ -42,13 +42,14 @@ public:
     std::mutex m_windowsMutex;
     std::vector<Window*> m_windows;
 
+    AppDrawer() noexcept(false);
+
     void setMousePosition(Vector2 mousePos);
     size_t findWindow(uint32_t id) noexcept(false);
     uint32_t addWindow(std::string title, RudeDrawerVec2D dims) noexcept(false);
     void removeWindow(uint32_t id) noexcept(false);
     void setWindowPolling(uint32_t id, bool polling) noexcept(false);
     void changeActiveWindow(uint32_t id) noexcept(false);
-    void startServer() noexcept(false);
 
     ~AppDrawer() noexcept(true);
 };
