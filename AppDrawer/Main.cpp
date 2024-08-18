@@ -4,12 +4,8 @@
 #include <string.h>
 #include <sys/signal.h>
 
-#define ERROR_HANDLING_IMPLEMENTATION
-#include "ErrorHandling.h"
-
 #include "AppDrawer.h"
 #include "RudeDrawer.h"
-#include "Util.h"
 
 #define BORDER_THICKNESS 5
 #define TITLEBAR_THICKNESS 20.0f
